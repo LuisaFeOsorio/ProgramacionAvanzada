@@ -1,0 +1,5 @@
+### Saludo
+GET http://localhost:8080/greeting
+
+### Saludo con un nombre dado como parámetro
+GET http://localhost:8080/greeting/Carlos
