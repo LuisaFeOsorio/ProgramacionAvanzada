@@ -1,0 +1,16 @@
+ResponseEntity--> El objeto ResponseEntitynos permite asignar un código
+de respuesta ( status) y un contenido ( body), para este caso estamos
+devolviendo un mensaje en formato JSON. El objetivo del DTO ResponseDTOes que todas
+las respuestas del servidor tengan la misma estructura .
+
+@PathVariable-->Se usa cuando quieres identificar un recurso específico.
+                Ejemplo: consultar un usuario por su id.
+
+@RequestBody-->Datos en el cuerpo de la petición (body)
+               Se usa cuando quieres enviar un objeto completo o varios datos estructurados.
+               Siempre que uses un DTO, este viaja en el cuerpo de la petición
+----------------
+@PostMapping--> crear recursos nuevos
+@PutMapping--> Actualizar un recurso completo (reemplazarlo con nuevos datos).
+Sin ellas Spring no sabría qué hacer cuando llega una petición a cierta URL.
+
