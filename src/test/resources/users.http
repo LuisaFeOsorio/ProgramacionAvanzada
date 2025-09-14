@@ -1,0 +1,34 @@
+### Obtener todos los usuarios
+GET http://localhost:8080/api/users
+
+### Obtener un usuario por id (cambie 1 por el id del usuario que desea obtener)
+GET http://localhost:8080/api/users/1
+
+### Crear un usuario
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "name": "Carlos",
+  "phone": "121212",
+  "email": "carlos@email.com",
+  "password": "12345678",
+  "photoUrl": "",
+  "dateBirth": "2000-08-22",
+  "role": "USER"
+}
+
+### Actualizar un usuario (cambie 1 por el id del usuario que desea actualizar)
+PUT http://localhost:8080/api/users/1
+Content-Type: application/json
+
+{
+  "name": "Carlos",
+  "phone": "333333",
+  "photoUrl": "mi foto",
+  "dateBirth": "2000-08-22",
+  "role": "USER"
+}
+
+### Eliminar un usuario (cambie 1 por el id del usuario que desea eliminar)
+DELETE http://localhost:8080/api/users/1

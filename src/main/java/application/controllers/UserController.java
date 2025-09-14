@@ -42,8 +42,11 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<UsuarioDTO>>> listAll(){
-        //Lógica para consultar todos los usuarios
+    public ResponseEntity<ResponseDTO<List<UsuarioDTO>>> listAll(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String phone
+    ) {
+        //Lógica para consultar todos los usuarios con filtros
         List<UsuarioDTO> list = new ArrayList<>();
         return ResponseEntity.ok(new ResponseDTO<>(false, list));
     }
