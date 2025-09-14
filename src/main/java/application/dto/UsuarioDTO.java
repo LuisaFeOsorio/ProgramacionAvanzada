@@ -1,6 +1,6 @@
 package application.dto;
 
-public record UserDTO(
+public record UsuarioDTO(
         String id,
         String name,
         String email,
