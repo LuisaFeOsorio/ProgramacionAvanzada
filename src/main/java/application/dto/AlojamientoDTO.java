@@ -7,7 +7,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.util.List;
 
-public record Alojamiento(
+public record AlojamientoDTO(
         @NotNull Long id,
         @NotBlank @Length(max = 100) String nombre,
         @NotBlank @Length(max = 300) String descripcion,
