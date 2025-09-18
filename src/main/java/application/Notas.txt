@@ -16,3 +16,17 @@ Sin ellas Spring no sabría qué hacer cuando llega una petición a cierta URL.
 
 @RequestParamse usa para enviar parámetros por la url a la petición.
 En este caso, estas peticiones son válidas:
+
+No hay obtener todos los usuarios
+Controlador de imagenes
+Todas las personas se registran al inicio como un usuario y ese usuario se puede
+cpnvertir en anfitrion(crear alojamientos)
+longitud y latitud, que se muestre un mapa, el de click donde quiere y nosotros tomar los datos
+En interface solamente se declaran los metodos, en este caso tenemos la interface
+usuarioservice y su implementacion que tiene la logica del negocio
+El controlador lo que hace es llamar los metodos del service
+YA DEBERIAN ESTAR LOS REST CONTROLLER, DTO
+HACER HOST PROFILE, AGREGAR STATUS AL USUARIO NORMAL, SERVICIOS DE LAS RESERVAS, PICINA, PARQUEADERO...
+CREAR UN ALOJAMIENTO E IR AGREGANDO SERVICIOS
+ID SON LONG
+28 dtos

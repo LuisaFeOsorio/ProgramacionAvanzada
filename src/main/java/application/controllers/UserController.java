@@ -3,7 +3,7 @@ package application.controllers;
 import application.dto.CrearUsuarioDTO;
 import application.dto.EditarUsuarioDTO;
 import application.dto.ResponseDTO;
-import application.dto.UsuarioDTO;
+import application.dto.UserDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,18 +36,18 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseDTO<UsuarioDTO>> get(@PathVariable String id) throws Exception{
+    public ResponseEntity<ResponseDTO<UserDTO>> get(@PathVariable String id) throws Exception{
         //Lógica para consular el usuario
         return ResponseEntity.ok(new ResponseDTO<>(false, null));
     }
 
     @GetMapping
-    public ResponseEntity<ResponseDTO<List<UsuarioDTO>>> listAll(
+    public ResponseEntity<ResponseDTO<List<UserDTO>>> listAll(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String phone
     ) {
         //Lógica para consultar todos los usuarios con filtros
-        List<UsuarioDTO> list = new ArrayList<>();
+        List<UserDTO> list = new ArrayList<>();
         return ResponseEntity.ok(new ResponseDTO<>(false, list));
     }
 }
