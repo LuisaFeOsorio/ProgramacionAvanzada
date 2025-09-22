@@ -1,33 +1,32 @@
 package application.controllers;
 
-import application.dto.CambioContraseniaDTO;
-import application.dto.RecuperarContraseniaDTO;
-import application.dto.ResetContraseniaDTO;
-import application.dto.ResponseDTO;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/password")
 public class ContraseniaController {
 
-    @PutMapping("/cambiar-password")
-    public ResponseEntity<ResponseDTO<String>> cambiarPassword(@Valid @RequestBody CambioContraseniaDTO dto) {
-        // Lógica para validar la contraseña actual y actualizarla
-        return ResponseEntity.ok(new ResponseDTO<>(false, "La contraseña ha sido cambiada exitosamente"));
-    }
+    // DTO con la info para resetear contraseña
+    public static class ResetContraseniaDTO {
+        private String email;
+        private String nuevaContrasenia;
 
-    @PostMapping("/recuperar")
-    public ResponseEntity<ResponseDTO<String>> recuperar(@Valid @RequestBody RecuperarContraseniaDTO dto) {
-        // Lógica para generar token y enviar correo
-        return ResponseEntity.ok(new ResponseDTO<>(false, "Se ha enviado un enlace de recuperación al correo"));
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getNuevaContrasenia() { return nuevaContrasenia; }
+        public void setNuevaContrasenia(String nuevaContrasenia) { this.nuevaContrasenia = nuevaContrasenia; }
     }
 
     @PostMapping("/reset")
-    public ResponseEntity<ResponseDTO<String>> reset(@Valid @RequestBody ResetContraseniaDTO dto) {
-        // Lógica para validar token y asignar nueva contraseña
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO<>(false, "La contraseña ha sido restablecida"));
+    public String reset(@RequestBody ResetContraseniaDTO dto) {
+        // Aquí la lógica para resetear la contraseña
+        return "Contraseña reseteada para: " + dto.getEmail();
+    }
+
+    @PostMapping("/change")
+    public String changePassword(@RequestParam String oldPassword, @RequestParam String newPassword) {
+        // Aquí la lógica para cambiar contraseña con la antigua
+        return "Contraseña cambiada correctamente";
     }
 }

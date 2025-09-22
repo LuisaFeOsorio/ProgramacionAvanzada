@@ -1,0 +1,28 @@
+### Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "luisa@email.com",
+  "password": "MiClaveSegura123"
+}
+
+### Registro (auth separado de users si decides mantener ambos)
+POST http://localhost:8080/api/auth/registro
+Content-Type: application/json
+
+{
+  "name": "Pedro",
+  "phone": "123456",
+  "email": "pedro@email.com",
+  "password": "ClaveSegura123",
+  "photoUrl": "",
+  "dateBirth": "2001-01-01",
+  "role": "HOST"
+}
+
+### Recuperar contraseña
+POST http://localhost:8080/api/auth/recuperar?correo=luisa@email.com
+
+### Resetear contraseña
+POST http://localhost:8080/api/auth/reset?token=abc123&nuevaContrasena=ClaveNueva456

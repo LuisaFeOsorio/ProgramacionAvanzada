@@ -15,7 +15,7 @@ Content-Type: application/json
   "password": "12345678",
   "photoUrl": "",
   "dateBirth": "2000-08-22",
-  "role": "USER"
+  "role": "GUEST"
 }
 
 ### Actualizar un usuario (cambie 1 por el id del usuario que desea actualizar)

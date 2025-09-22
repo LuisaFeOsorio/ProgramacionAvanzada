@@ -37,7 +37,6 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO<UserDTO>> get(@PathVariable String id) throws Exception{
-        //Lógica para consular el usuario
         return ResponseEntity.ok(new ResponseDTO<>(false, null));
     }
 
