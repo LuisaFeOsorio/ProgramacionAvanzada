@@ -1,9 +1,9 @@
 package application.services;
 
-import application.dto.CrearReservaDTO;
-import application.dto.FiltroReservaDTO;
-import application.dto.PaginacionDTO;
-import application.dto.ReservaDTO;
+import application.dto.reserva.CrearReservaDTO;
+import application.dto.reserva.FiltroReservaDTO;
+import application.dto.paginacion.PaginacionDTO;
+import application.dto.reserva.ReservaDTO;
 
 import java.time.LocalDate;
 import java.util.List;

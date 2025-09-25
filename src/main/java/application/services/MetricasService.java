@@ -1,6 +1,6 @@
 package application.services;
 
-import application.dto.MetricasAlojamientoDTO;
+import application.dto.alojamiento.MetricasAlojamientoDTO;
 
 import java.time.LocalDate;
 import java.util.List;

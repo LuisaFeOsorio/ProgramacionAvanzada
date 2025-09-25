@@ -1,8 +1,8 @@
 package application.controllers;
 
-import application.dto.AlojamientoDTO;
-import application.dto.CrearAlojamientoDTO;
-import application.dto.EditarAlojamientoDTO;
+import application.dto.alojamiento.AlojamientoDTO;
+import application.dto.alojamiento.CrearAlojamientoDTO;
+import application.dto.alojamiento.EditarAlojamientoDTO;
 import application.dto.ResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

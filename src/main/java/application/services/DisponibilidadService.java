@@ -1,6 +1,6 @@
 package application.services;
 
-import application.dto.DateRangeDTO;
+import application.dto.alojamiento.DateRangeDTO;
 
 import java.time.LocalDate;
 import java.util.List;

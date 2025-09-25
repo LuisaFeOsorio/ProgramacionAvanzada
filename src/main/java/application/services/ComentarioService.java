@@ -1,9 +1,9 @@
 package application.services;
 
-import application.dto.ComentarioDTO;
-import application.dto.CrearComentarioDTO;
-import application.dto.PaginacionDTO;
-import application.dto.RespuestaComentarioDTO;
+import application.dto.comentario.ComentarioDTO;
+import application.dto.comentario.CrearComentarioDTO;
+import application.dto.paginacion.PaginacionDTO;
+import application.dto.comentario.RespuestaComentarioDTO;
 
 public interface ComentarioService {
     /** Crear comentario asociado a una reserva completada (validar que la reserva fue completada). */

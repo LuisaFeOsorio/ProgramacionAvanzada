@@ -2,16 +2,16 @@ package application.services;
 
 
 
-import application.dto.CrearUsuarioDTO;
-import application.dto.LoginDTO;
-import application.dto.UserDTO;
+import application.dto.usuario.CrearUsuarioDTO;
+import application.dto.login.LoginDTO;
+import application.dto.usuario.UsuarioDTO;
 
 public interface AuthService {
     /** Inicia sesión: devuelve token + datos básicos. */
     LoginDTO login(LoginDTO request);
 
     /** Registro de usuario que devuelve usuario creado (sin pwd). */
-    UserDTO register(CrearUsuarioDTO dto);
+    UsuarioDTO register(CrearUsuarioDTO dto);
 
     /** Cierra sesión (invalidar token si aplica). */
     void logout(String token);

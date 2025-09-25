@@ -1,7 +1,7 @@
 package application.controllers;
 
-import application.dto.CrearReservaDTO;
-import application.dto.ReservaDTO;
+import application.dto.reserva.CrearReservaDTO;
+import application.dto.reserva.ReservaDTO;
 import application.dto.ResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

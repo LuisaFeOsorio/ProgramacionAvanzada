@@ -27,3 +27,5 @@ CREAR UN ALOJAMIENTO E IR AGREGANDO SERVICIOS
 
 los respositorios son interfaces que sirven para comunicarsen con la db, van
 por cada entidad(usuario..)
+usar password encode
+correo, unique true

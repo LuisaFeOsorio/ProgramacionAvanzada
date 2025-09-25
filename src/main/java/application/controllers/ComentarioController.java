@@ -1,9 +1,9 @@
 package application.controllers;
 
-import application.dto.ComentarioDTO;
-import application.dto.CrearComentarioDTO;
+import application.dto.comentario.ComentarioDTO;
+import application.dto.comentario.CrearComentarioDTO;
 import application.dto.ResponseDTO;
-import application.dto.RespuestaComentarioDTO;
+import application.dto.comentario.RespuestaComentarioDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
 package application.model.entidades;
 
-import application.model.Role;
+import application.model.enumm.Role;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,19 +18,24 @@ public class Usuario {
     private String email;
 
     @Column(nullable = false)
-    private String contraseña;
+    private String contrasenia;
 
+    @Column(length = 50)
     private String telefono;
 
     @Enumerated(EnumType.STRING)
     private Role rol;
 
+    @Column(length = 50)
     private LocalDate fechaNacimiento;
 
+    @Column(length = 50)
     private String fotoPerfil;
 
+    @Column(length = 2000)
     private String descripcionPersonal;
 
+    @Column(length = 50)
     private Boolean activo = true;
 
     @OneToMany(mappedBy = "anfitrion", cascade = CascadeType.ALL)
