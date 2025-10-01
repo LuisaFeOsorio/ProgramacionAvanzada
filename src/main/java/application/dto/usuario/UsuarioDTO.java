@@ -1,89 +1,28 @@
 package application.dto.usuario;
 
-
-
 import application.model.enumm.Role;
+import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 
-public class UsuarioDTO {
-    private String id;
-    private String name;
-    private String phone;
-    private String email;
-    private String photoUrl;
-    private LocalDate dateBirth;
-    private Role role;
+public record UsuarioDTO(
 
-    // Constructor vacío
-    public UsuarioDTO() {}
+        @NotBlank
+        @Length(max = 100) String nombre,
 
-    // Constructor con parámetros
-    public UsuarioDTO(String id, String name, String phone, String email, String photoUrl, LocalDate dateBirth, Role role) {
-        this.id = id;
-        this.name = name;
-        this.phone = phone;
-        this.email = email;
-        this.photoUrl = photoUrl;
-        this.dateBirth = dateBirth;
-        this.role = role;
-    }
+        @NotBlank
+        @Length(max = 150) @Email String email,
 
-    // Getters y Setters
-    public String getId() {
-        return id;
-    }
+        @Length(max = 50) String telefono,
 
-    public void setId(String id) {
-        this.id = id;
-    }
+        @NotBlank @Length(min = 7, max = 100) String contrasenia,
 
-    public String getName() {
-        return name;
-    }
+        @Length(max = 300) String fotoPerfil,
 
-    public void setName(String name) {
-        this.name = name;
-    }
+        @NotNull @Past LocalDate fechaNacimiento,
 
-    public String getPhone() {
-        return phone;
-    }
+        @NotNull Role rol
 
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhotoUrl() {
-        return photoUrl;
-    }
-
-    public void setPhotoUrl(String photoUrl) {
-        this.photoUrl = photoUrl;
-    }
-
-    public LocalDate getDateBirth() {
-        return dateBirth;
-    }
-
-    public void setDateBirth(LocalDate dateBirth) {
-        this.dateBirth = dateBirth;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-}
+) {}
 

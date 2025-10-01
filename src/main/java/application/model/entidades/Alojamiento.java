@@ -45,6 +45,7 @@ public class Alojamiento {
     @Column(length = 50)
     private Integer capacidadMaxima;
 
+    @Builder.Default //para que lombok no lo ponga como null
     @Column(length = 50)
     private Boolean eliminado = false;
 
@@ -67,6 +68,7 @@ public class Alojamiento {
             name = "alojamiento_servicios",
             joinColumns = @JoinColumn(name = "alojamiento_id")
     )
+    @Builder.Default //para que lonbok no lo ponga como null
     @Column(name = "servicio")
     private List<Servicio> servicios = new ArrayList<>();
 

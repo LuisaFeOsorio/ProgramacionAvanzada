@@ -9,11 +9,12 @@ import org.hibernate.validator.constraints.Length;
 import java.time.LocalDate;
 
 public record EditarUsuarioDTO(
-        @NotBlank @Length(max = 100) String name,
-        @Length(max = 10) String phone,
-        @Length(max = 300) String photoUrl,
-        @NotNull @Past LocalDate dateBirth,
-        @NotNull @Past Role role
+        @NotBlank @Length(max = 100) String nombre,
+        @Length(max = 10) String telefono,
+        @Length(max = 300) String fotoPerfil,
+        @NotNull @Past LocalDate fechaNacimiento,
+        @NotNull @Past Role rol,
+        @NotNull @Past String contrasenia
 ) {
 
 }

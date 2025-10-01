@@ -3,11 +3,16 @@ package application.model.entidades;
 import application.model.enumm.EstadoReserva;
 import application.model.enumm.Servicio;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "reservas")
 public class Reserva {
 

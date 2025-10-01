@@ -2,19 +2,29 @@ package application.model.entidades;
 
 import application.model.enumm.Role;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
+
 @Table(name = "usuarios")
 public class Usuario {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 100)
     private String nombre;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 150)
     private String email;
 
     @Column(nullable = false)
@@ -24,26 +34,23 @@ public class Usuario {
     private String telefono;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private Role rol;
 
-    @Column(length = 50)
+    @Column(name = "fechaNacimiento")
     private LocalDate fechaNacimiento;
 
-    @Column(length = 50)
+    @Column(name = "fotoPerfil", length = 300)
     private String fotoPerfil;
 
-    @Column(length = 2000)
-    private String descripcionPersonal;
+    @Column(nullable = false)
+    private Boolean activo = Boolean.TRUE;
 
-    @Column(length = 50)
-    private Boolean activo = true;
+    @OneToMany(mappedBy = "anfitrion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Alojamiento> alojamientos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "anfitrion", cascade = CascadeType.ALL)
-    private List<Alojamiento> alojamientos;
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reserva> reservas = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private List<Reserva> reservas;
-
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private List<Comentario> comentarios;
-}
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comentario> comentarios = new ArrayList<>();}

@@ -1,8 +1,12 @@
 package application.model.entidades;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "imagenes")
 public class Imagen {
     @Id
