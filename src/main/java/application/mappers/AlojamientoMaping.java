@@ -1,4 +1,4 @@
-package mappers;
+package application.mappers;
 
 public interface AlojamientoMaping {
 }

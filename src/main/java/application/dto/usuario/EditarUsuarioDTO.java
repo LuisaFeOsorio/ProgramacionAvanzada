@@ -1,7 +1,7 @@
 package application.dto.usuario;
 
 
-import application.model.enumm.Role;
+import application.model.enums.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;

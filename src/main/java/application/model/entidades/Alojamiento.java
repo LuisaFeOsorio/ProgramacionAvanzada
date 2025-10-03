@@ -1,6 +1,6 @@
 package application.model.entidades;
 
-import application.model.enumm.Servicio;
+import application.model.enums.Servicio;
 import jakarta.persistence.*;
 import lombok.*;
 

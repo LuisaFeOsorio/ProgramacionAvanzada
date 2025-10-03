@@ -1,6 +1,6 @@
 package application.dto.usuario;
 
-import application.model.enumm.Role;
+import application.model.enums.Role;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;
 

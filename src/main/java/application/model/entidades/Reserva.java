@@ -1,7 +1,7 @@
 package application.model.entidades;
 
-import application.model.enumm.EstadoReserva;
-import application.model.enumm.Servicio;
+import application.model.enums.EstadoReserva;
+import application.model.enums.Servicio;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

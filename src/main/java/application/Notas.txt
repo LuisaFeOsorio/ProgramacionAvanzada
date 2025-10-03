@@ -29,3 +29,11 @@ los respositorios son interfaces que sirven para comunicarsen con la db, van
 por cada entidad(usuario..)
 usar password encode
 correo, unique true
+
+SMTP PASSWORD:wzyj aeda vlmw siig
+SMTP_USERNAME pruebaprogramaciondl@gmail.com
+
+CLOUD (IMAGENGES)
+name: dzjtafatn
+Clave api: 255329149496492
+Clave secreta: xXBlXsId3ELyxBzFYGBOQDTu-78
