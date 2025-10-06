@@ -13,11 +13,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class JWTFilter extends OncePerRequestFilter{
+public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtils jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
@@ -38,26 +39,27 @@ public class JWTFilter extends OncePerRequestFilter{
         try {
             // Validar el token y obtener el payload
             Jws<Claims> payload = jwtUtil.parseJwt(token);
-            String username = payload.getPayload().getSubject();
+            String username = payload.getBody().getSubject(); // <- usar getBody()
 
             // Si el usuario no está autenticado, crear un nuevo objeto de autenticación
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                // Crear un objeto UserDetails con el nombre de usuario y el rol
+                // Cargar usuario desde UserDetailsService
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
                 // Crear un objeto de autenticación y establecerlo en el contexto de seguridad
-                UsernamePasswordAuthenticationToken authentication = new
-                        UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
             // Si el token no es válido, enviar un error 401
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
             return;
         }
 
@@ -67,6 +69,8 @@ public class JWTFilter extends OncePerRequestFilter{
 
     private String getToken(HttpServletRequest req) {
         String header = req.getHeader("Authorization");
-        return header != null && header.startsWith("Bearer ") ? header.replace("Bearer ", "") : null;
+        return (header != null && header.startsWith("Bearer "))
+                ? header.substring(7)
+                : null;
     }
 }

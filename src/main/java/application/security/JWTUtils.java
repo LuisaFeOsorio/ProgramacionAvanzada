@@ -3,34 +3,51 @@ package application.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
+
 import javax.crypto.SecretKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
+
 @Component
 public class JWTUtils {
 
     public String generateToken(String id, Map<String, String> claims) {
         Instant now = Instant.now();
         return Jwts.builder()
-                .claims(claims)
-                .subject(id)
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(1L, ChronoUnit.HOURS)))
-                .signWith(getKey())
+                .setClaims(claims)
+                .setSubject(id)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(1, ChronoUnit.HOURS)))
+                .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public Jws<Claims> parseJwt(String jwtString) throws ExpiredJwtException,
-            UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
-        JwtParser jwtParser = Jwts.parser().verifyWith(getKey()).build();
-        return jwtParser.parseSignedClaims(jwtString);
+    public boolean validateToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            // Verificar expiración
+            return !claims.getExpiration().before(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
-    private SecretKey getKey(){
+    public Jws<Claims> parseJwt(String jwtString) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getKey())
+                .build()
+                .parseClaimsJws(jwtString);
+    }
+
+    private SecretKey getKey() {
         String secretKey = "secretsecretsecretsecretsecretsecretsecretsecret";
-        byte[] secretKeyBytes = secretKey.getBytes();
-        return Keys.hmacShaKeyFor(secretKeyBytes);
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 }

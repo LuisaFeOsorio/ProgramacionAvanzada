@@ -1,34 +1,39 @@
+### Crear usuario
+POST http://localhost:8080/api/usuarios
+Content-Type: application/json
+
+{
+  "nombre": "María García",
+  "correo": "maria@test.com",
+  "contrasenia": "123456"
+}
+
 ### Obtener todos los usuarios
-GET http://localhost:8080/api/users
+GET http://localhost:8080/api/usuarios?nombre=María&correo=test&pagina=0&tamaño=10
 
-### Obtener un usuario por id (cambie 1 por el id del usuario que desea obtener)
-GET http://localhost:8080/api/users/1
+### Obtener usuario por ID
+GET http://localhost:8080/api/usuarios/123
 
-### Crear un usuario
-POST http://localhost:8080/api/users
+### Actualizar usuario
+PUT http://localhost:8080/api/usuarios/123
 Content-Type: application/json
 
 {
-  "name": "Carlos",
-  "phone": "121212",
-  "email": "carlos@email.com",
-  "password": "12345678",
-  "photoUrl": "",
-  "dateBirth": "2000-08-22",
-  "role": "GUEST"
+  "nombre": "María García López",
+  "correo": "maria.nueva@test.com"
 }
 
-### Actualizar un usuario (cambie 1 por el id del usuario que desea actualizar)
-PUT http://localhost:8080/api/users/1
+### Cambiar contraseña
+PATCH http://localhost:8080/api/usuarios/123/contrasenia
 Content-Type: application/json
 
 {
-  "name": "Carlos",
-  "phone": "333333",
-  "photoUrl": "mi foto",
-  "dateBirth": "2000-08-22",
-  "role": "USER"
+  "contraseniaActual": "123456",
+  "nuevaContrasenia": "nueva123"
 }
 
-### Eliminar un usuario (cambie 1 por el id del usuario que desea eliminar)
-DELETE http://localhost:8080/api/users/1
+### Cambiar estado (activar/desactivar)
+PATCH http://localhost:8080/api/usuarios/123/estado
+
+### Eliminar usuario
+DELETE http://localhost:8080/api/usuarios/123

@@ -22,7 +22,14 @@ public record UsuarioDTO(
 
         @NotNull @Past LocalDate fechaNacimiento,
 
-        @NotNull Role rol
+        @NotNull Role rol,
+        Boolean activo,
+
+        //  CAMPOS NUEVOS ESPECÍFICOS PARA ANFITRIÓN
+        @Length(max = 500) String descripcionPersonal,
+        @Length(max = 100) String documentoIdentidad,
+        @Length(max = 200) String archivoDocumentos,
+        Boolean documentosVerificados
 
 ) {}
 

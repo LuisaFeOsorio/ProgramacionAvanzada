@@ -17,18 +17,10 @@ Sin ellas Spring no sabría qué hacer cuando llega una petición a cierta URL.
 @RequestParamse usa para enviar parámetros por la url a la petición.
 En este caso, estas peticiones son válidas:
 
-No hay obtener todos los usuarios
-Todas las personas se registran al inicio como un usuario y ese usuario se puede
-cpnvertir en anfitrion(crear alojamientos)
 longitud y latitud, que se muestre un mapa, el de click donde quiere y nosotros tomar los datos
 
 HACER HOST PROFILE, AGREGAR STATUS AL USUARIO NORMAL, SERVICIOS DE LAS RESERVAS, PICINA, PARQUEADERO...
 CREAR UN ALOJAMIENTO E IR AGREGANDO SERVICIOS
-
-los respositorios son interfaces que sirven para comunicarsen con la db, van
-por cada entidad(usuario..)
-usar password encode
-correo, unique true
 
 SMTP PASSWORD:wzyj aeda vlmw siig
 SMTP_USERNAME pruebaprogramaciondl@gmail.com

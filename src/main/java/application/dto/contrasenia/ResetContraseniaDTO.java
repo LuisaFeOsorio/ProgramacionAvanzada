@@ -1,4 +1,4 @@
-package application.dto.contraseña;
+package application.dto.contrasenia;
 
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.Length;

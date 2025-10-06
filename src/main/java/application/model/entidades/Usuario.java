@@ -12,7 +12,6 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-
 @Table(name = "usuarios")
 public class Usuario {
 
@@ -36,14 +35,27 @@ public class Usuario {
     @Column(length = 50)
     private Role rol;
 
-    @Column(name = "fechaNacimiento")
+    @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
-    @Column(name = "fotoPerfil", length = 300)
+    @Column(name = "foto_perfil", length = 300)
     private String fotoPerfil;
 
     @Column(nullable = false)
     private Boolean activo = Boolean.TRUE;
+
+    // CAMPOS PARA ANFITRIONES
+    @Column(name = "descripcion_personal", length = 500)
+    private String descripcionPersonal;
+
+    @Column(name = "documento_identidad", length = 100)
+    private String documentoIdentidad;
+
+    @Column(name = "archivo_documentos", length = 200)
+    private String archivoDocumentos;
+
+    @Column(name = "documentos_verificados")
+    private Boolean documentosVerificados = Boolean.FALSE;
 
     @OneToMany(mappedBy = "anfitrion", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Alojamiento> alojamientos = new ArrayList<>();
@@ -52,4 +64,21 @@ public class Usuario {
     private List<Reserva> reservas = new ArrayList<>();
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comentario> comentarios = new ArrayList<>();}
+    private List<Comentario> comentarios = new ArrayList<>();
+
+
+
+    // Constructor para creación básica
+    public Usuario(String nombre, String email, String contrasenia, Role rol) {
+        this.nombre = nombre;
+        this.email = email;
+        this.contrasenia = contrasenia;
+        this.rol = rol;
+        this.activo = true;
+        this.documentosVerificados = false;
+    }
+
+    public Usuario() {
+
+    }
+}
