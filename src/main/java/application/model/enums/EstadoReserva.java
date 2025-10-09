@@ -1,5 +1,5 @@
 package application.model.enums;
 
 public enum EstadoReserva {
-    PENDIENTE, CONFIRMADA, CANCELADA, COMPLETADA
+    PENDIENTE, CONFIRMADA, CANCELADA, COMPLETADA, RECHAZADA
 }

@@ -1,6 +1,6 @@
 package application.services.impl;
 
-import application.model.entidades.Usuario;
+import application.model.Usuario;
 import application.repositories.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,7 +22,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
 
-        Usuario user = userRepository.findById(id)
+        Usuario user = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         List<GrantedAuthority> authorities = new ArrayList<>();

@@ -50,6 +50,6 @@ public class RestExceptionHandler {
         for (FieldError e: results.getFieldErrors()) {
             errors.add( new ValidationDTO(e.getField(), e.getDefaultMessage()) );
         }
-        return ResponseEntity.badRequest().body( new ResponseDTO<>(true, errors) );
+        return ResponseEntity.badRequest().body( new ResponseDTO<>(true, errors.toString()) );
     }
 }

@@ -4,16 +4,15 @@ import application.dto.contrasenia.CambioContraseniaDTO;
 import application.dto.usuario.*;
 import application.dto.usuario.VolverseAnfitrionDTO;
 import application.dto.usuario.ActualizarAnfitrionDTO;
-import application.exceptions.ValueConflictException;
 import application.exceptions.usuario.EmailEnUsoException;
 import application.exceptions.usuario.UsuarioNoEncontradoException;
-import application.mappers.UsuarioMapping;
-import application.model.entidades.Usuario;
+import application.mappers.UsuarioMapper;
+import application.model.Usuario;
 import application.model.enums.Role;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import application.repositories.UsuarioRepository;
-import application.services.UsuarioService;
+import application.services.usuario.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class UsuarioServiceImpl implements UsuarioService {
 
-    private final UsuarioMapping usuarioMapping;
+    private final UsuarioMapper usuarioMapping;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -52,7 +51,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public UsuarioDTO obtenerPorId(String id) throws UsuarioNoEncontradoException {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
         return usuarioMapping.toDTO(usuario);
 
@@ -60,10 +59,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public void eliminar(String id) throws UsuarioNoEncontradoException {
-        if (!usuarioRepository.existsById(id)) {
+        if (!usuarioRepository.existsById(Long.valueOf(id))) {
             throw new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id);
         }
-        usuarioRepository.deleteById(id);
+        usuarioRepository.deleteById(Long.valueOf(id));
     }
 
 
@@ -92,7 +91,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     // ✅ ACTUALIZAR USUARIO
     @Override
     public UsuarioDTO actualizar(String id, EditarUsuarioDTO usuarioDTO) throws EmailEnUsoException {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
 
         // Validar que el nuevo email no exista en otro usuario (si se está cambiando)
@@ -116,7 +115,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public void cambiarContrasenia(String id, CambioContraseniaDTO cambioContraseniaDTO)throws UsuarioNoEncontradoException {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
 
         // Validar que la contraseña actual sea correcta
@@ -136,7 +135,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     // ✅ CAMBIAR ESTADO (ACTIVAR/DESACTIVAR)
     @Override
     public UsuarioDTO cambiarEstado(String id)throws UsuarioNoEncontradoException {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
 
         usuario.setActivo(!usuario.getActivo());
@@ -147,7 +146,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     // ✅ VOLVERSE ANFITRIÓN
     @Override
     public UsuarioDTO volverseAnfitrion(String id, VolverseAnfitrionDTO anfitrionDTO) throws UsuarioNoEncontradoException {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
 
         // Validar que no sea ya anfitrión
@@ -169,7 +168,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     // ✅ ACTUALIZAR INFORMACIÓN DE ANFITRIÓN
     @Override
     public UsuarioDTO actualizarInformacionAnfitrion(String id, ActualizarAnfitrionDTO anfitrionDTO) throws UsuarioNoEncontradoException{
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
 
         // Validar que sea anfitrión
@@ -195,7 +194,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     // ✅ VERIFICAR DOCUMENTOS (SOLO ADMIN)
     @Override
     public UsuarioDTO verificarDocumentos(String id, boolean verificados)throws UsuarioNoEncontradoException {
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
 
         // Validar que sea anfitrión
@@ -244,15 +243,15 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     // ✅ MÉTODOS DE CONSULTA ADICIONALES
     @Transactional(readOnly = true)
-    public boolean esAnfitrion(String id) throws UsuarioNoEncontradoException{
-        Usuario usuario = usuarioRepository.findById(id)
+    public boolean esAnfitrion(String id) throws UsuarioNoEncontradoException {
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado"));
         return usuario.getRol() == Role.ANFITRION;
     }
 
     @Transactional(readOnly = true)
     public boolean tieneDocumentosVerificados(String  id) throws UsuarioNoEncontradoException{
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado"));
         return Boolean.TRUE.equals(usuario.getDocumentosVerificados());
     }

@@ -29,3 +29,6 @@ CLOUD (IMAGENGES)
 name: dzjtafatn
 Clave api: 255329149496492
 Clave secreta: xXBlXsId3ELyxBzFYGBOQDTu-78
+
+
+

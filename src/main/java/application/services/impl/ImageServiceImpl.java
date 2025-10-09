@@ -1,6 +1,6 @@
 package application.services.impl;
 
-import application.services.ImagenService;
+import application.services.imagen.ImagenService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,9 @@ public class ImageServiceImpl implements ImagenService {
 
     public ImageServiceImpl(){
         Map<String, String> config = new HashMap<>();
-        config.put("cloud_name", "SU_CLOUD_NAME");
-        config.put("api_key", "SU_API_KEY");
-        config.put("api_secret", "SU_API_SECRET");
+        config.put("cloud_name", "dzjtafatn");
+        config.put("api_key", "255329149496492");
+        config.put("api_secret", "xXBlXsId3ELyxBzFYGBOQDTu-78");
         cloudinary = new Cloudinary(config);
     }
 

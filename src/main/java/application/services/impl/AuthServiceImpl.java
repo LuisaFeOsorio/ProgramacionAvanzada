@@ -1,15 +1,14 @@
 package application.services.impl;
 
-
 import application.dto.auth.LoginDTO;
 import application.dto.auth.TokenDTO;
 import application.dto.usuario.CrearUsuarioDTO;
 import application.dto.usuario.UsuarioDTO;
-import application.model.entidades.Usuario;
+import application.model.Usuario;
 import application.model.enums.Role;
 import application.repositories.UsuarioRepository;
 import application.security.JWTUtils;
-import application.services.AuthService;
+import application.services.login.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,7 +55,14 @@ public class AuthServiceImpl implements AuthService {
         user.setContrasenia(passwordEncoder.encode(dto.contrasenia()));
         user.setFotoPerfil(dto.fotoPerfil());
         user.setFechaNacimiento(dto.fechaNacimiento());
-        user.setRol(dto.rol() != null ? dto.rol() : Role.GUEST);
+        user.setRol(dto.rol() != null ? dto.rol() : Role.USUARIO);
+
+        // Establecer valores por defecto para campos que no vienen en CrearUsuarioDTO
+        user.setActivo(true);
+        user.setDescripcionPersonal(null);
+        user.setDocumentoIdentidad(null);
+        user.setArchivoDocumentos(null);
+        user.setDocumentosVerificados(false);
 
         user = userRepository.save(user);
 
@@ -64,10 +70,15 @@ public class AuthServiceImpl implements AuthService {
                 user.getNombre(),
                 user.getEmail(),
                 user.getTelefono(),
-                user.getContrasenia(),
+                user.getContrasenia(), // Nota: Considera no retornar la contraseña por seguridad
                 user.getFotoPerfil(),
                 user.getFechaNacimiento(),
-                user.getRol()
+                user.getRol(),
+                user.getActivo(),
+                user.getDescripcionPersonal(),
+                user.getDocumentoIdentidad(),
+                user.getArchivoDocumentos(),
+                user.getDocumentosVerificados()
         );
     }
 
@@ -76,7 +87,6 @@ public class AuthServiceImpl implements AuthService {
         // Si manejas lista de tokens inválidos, podrías guardarlo ahí
         // Aquí solo se deja como placeholder
     }
-
 
     @Override
     public boolean validarToken(String token) {
