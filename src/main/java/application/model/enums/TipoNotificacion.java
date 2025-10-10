@@ -7,5 +7,7 @@ public enum TipoNotificacion {
     ALERTA,
     PROMOCION,
     RECORDATORIO,
-    COMENTARIO
+    COMENTARIO,
+    USUARIO,
+    ANFITRION
 }

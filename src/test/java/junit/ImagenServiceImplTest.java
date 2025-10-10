@@ -10,7 +10,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CloudinaryTest {
+class ImagenServiceImplTest {
 
     @Test
     void testUploadImage() throws Exception {

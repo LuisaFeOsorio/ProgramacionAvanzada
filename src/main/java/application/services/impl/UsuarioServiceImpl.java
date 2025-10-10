@@ -29,7 +29,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioMapper usuarioMapping;
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
 
     @Override

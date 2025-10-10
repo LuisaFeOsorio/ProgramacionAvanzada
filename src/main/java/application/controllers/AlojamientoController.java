@@ -6,6 +6,7 @@ import application.dto.alojamiento.EditarAlojamientoDTO;
 import application.dto.alojamiento.FiltroBusquedaDTO;
 import application.dto.paginacion.PaginacionDTO;
 import application.dto.ResponseDTO;
+import application.exceptions.alojamiento.*;
 import application.model.Usuario;
 import application.model.enums.TipoAlojamiento;
 import application.services.alojamiento.AlojamientoService;
@@ -26,59 +27,53 @@ public class AlojamientoController {
 
     private final AlojamientoService alojamientoService;
 
-    // ✅ CREAR ALOJAMIENTO (SOLO ANFITRIONES)
     @PostMapping
     @PreAuthorize("hasRole('ANFITRION')")
     public ResponseEntity<ResponseDTO<AlojamientoDTO>> crearAlojamiento(
             @AuthenticationPrincipal Usuario usuario,
-            @Valid @RequestBody CrearAlojamientoDTO dto) {
+            @Valid @RequestBody CrearAlojamientoDTO dto) throws CrearAlojamientoException {
 
         AlojamientoDTO alojamientoCreado = alojamientoService.crearAlojamiento(String.valueOf(usuario.getId()), dto);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ResponseDTO<>(false, "Alojamiento creado exitosamente", alojamientoCreado));
     }
 
-    // ✅ OBTENER ALOJAMIENTO POR ID (PÚBLICO)
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseDTO<AlojamientoDTO>> obtenerAlojamiento(@PathVariable String id) {
+    public ResponseEntity<ResponseDTO<AlojamientoDTO>> obtenerAlojamiento(@PathVariable String id) throws ObtenerAlojamientoException {
         AlojamientoDTO alojamiento = alojamientoService.obtenerAlojamiento(id);
         return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento obtenido", alojamiento));
     }
 
-    // ✅ EDITAR ALOJAMIENTO (SOLO ANFITRIÓN PROPIETARIO)
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ANFITRION')")
     public ResponseEntity<ResponseDTO<AlojamientoDTO>> editarAlojamiento(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable String id,
-            @Valid @RequestBody EditarAlojamientoDTO dto) {
+            @Valid @RequestBody EditarAlojamientoDTO dto) throws EditarAlojamientoException {
 
         AlojamientoDTO alojamientoActualizado = alojamientoService.editarAlojamiento(id, dto);
         return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento actualizado exitosamente", alojamientoActualizado));
     }
 
-    // ✅ ELIMINAR ALOJAMIENTO (SOLO ANFITRIÓN PROPIETARIO)
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ANFITRION')")
     public ResponseEntity<ResponseDTO<String>> eliminarAlojamiento(
             @AuthenticationPrincipal Usuario usuario,
-            @PathVariable String id) {
+            @PathVariable String id) throws EliminarAlojamientoException {
 
         alojamientoService.eliminarAlojamiento(id);
         return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento eliminado exitosamente", null));
     }
 
-    // ✅ LISTAR ALOJAMIENTOS DEL ANFITRIÓN AUTENTICADO
     @GetMapping("/mis-alojamientos")
     @PreAuthorize("hasRole('ANFITRION')")
     public ResponseEntity<ResponseDTO<List<AlojamientoDTO>>> listarMisAlojamientos(
-            @AuthenticationPrincipal Usuario usuario) {
+            @AuthenticationPrincipal Usuario usuario) throws ListarAlojamientosException {
 
         List<AlojamientoDTO> alojamientos = alojamientoService.listarAlojamientosAnfitrion(String.valueOf(usuario.getId()));
         return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamientos obtenidos", alojamientos));
     }
 
-    // ✅ BUSCAR ALOJAMIENTOS CON FILTROS COMPLETOS (PÚBLICO)
     @GetMapping("/buscar")
     public ResponseEntity<ResponseDTO<PaginacionDTO<AlojamientoDTO>>> buscarAlojamientos(
             @RequestParam(required = false) String ciudad,
@@ -89,7 +84,7 @@ public class AlojamientoController {
             @RequestParam(required = false) List<String> servicios,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamanio) {
+            @RequestParam(defaultValue = "10") int tamanio) throws BuscarAlojamientoException {
 
         FiltroBusquedaDTO filtro = new FiltroBusquedaDTO(
                 ciudad, tipo, precioMin, precioMax, capacidadMin, servicios, query, pagina, tamanio
@@ -99,13 +94,12 @@ public class AlojamientoController {
         return ResponseEntity.ok(new ResponseDTO<>(false, "Búsqueda completada", resultado));
     }
 
-    // ✅ BÚSQUEDA RÁPIDA POR CIUDAD Y CAPACIDAD (PÚBLICO)
     @GetMapping("/buscar-rapida")
     public ResponseEntity<ResponseDTO<PaginacionDTO<AlojamientoDTO>>> busquedaRapida(
             @RequestParam(required = false) String ciudad,
             @RequestParam(required = false) Integer capacidadMin,
             @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamanio) {
+            @RequestParam(defaultValue = "10") int tamanio) throws BuscarAlojamientoException {
 
         FiltroBusquedaDTO filtro = FiltroBusquedaDTO.crear(ciudad, capacidadMin);
         PaginacionDTO<AlojamientoDTO> resultado = alojamientoService.buscarAlojamientos(filtro);
@@ -113,7 +107,6 @@ public class AlojamientoController {
         return ResponseEntity.ok(new ResponseDTO<>(false, "Búsqueda rápida completada", resultado));
     }
 
-    // ✅ VERIFICAR SI PUEDE ELIMINARSE (SOLO ANFITRIÓN)
     @GetMapping("/{id}/puede-eliminarse")
     @PreAuthorize("hasRole('ANFITRION')")
     public ResponseEntity<ResponseDTO<Boolean>> puedeEliminarse(
@@ -127,7 +120,6 @@ public class AlojamientoController {
         return ResponseEntity.ok(new ResponseDTO<>(false, mensaje, puedeEliminarse));
     }
 
-    // ✅ MARCAR IMAGEN PRINCIPAL (SOLO ANFITRIÓN)
     @PutMapping("/{id}/imagen-principal")
     @PreAuthorize("hasRole('ANFITRION')")
     public ResponseEntity<ResponseDTO<AlojamientoDTO>> marcarImagenPrincipal(
@@ -139,12 +131,11 @@ public class AlojamientoController {
         return ResponseEntity.ok(new ResponseDTO<>(false, "Imagen principal actualizada", alojamientoActualizado));
     }
 
-    // ✅ ENDPOINT PARA OBTENER TODOS (ADMIN ONLY)
     @GetMapping("/admin/todos")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseDTO<PaginacionDTO<AlojamientoDTO>>> listarTodosAlojamientos(
             @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "20") int tamanio) {
+            @RequestParam(defaultValue = "20") int tamanio) throws BuscarAlojamientoException {
 
         FiltroBusquedaDTO filtro = new FiltroBusquedaDTO(
                 null, null, null, null, null, null, null, pagina, tamanio
@@ -154,7 +145,6 @@ public class AlojamientoController {
         return ResponseEntity.ok(new ResponseDTO<>(false, "Todos los alojamientos", resultado));
     }
 
-    // ✅ OBTENER TIPOS DE ALOJAMIENTO DISPONIBLES (PÚBLICO)
     @GetMapping("/tipos")
     public ResponseEntity<ResponseDTO<TipoAlojamiento[]>> obtenerTiposAlojamiento() {
         return ResponseEntity.ok(new ResponseDTO<>(

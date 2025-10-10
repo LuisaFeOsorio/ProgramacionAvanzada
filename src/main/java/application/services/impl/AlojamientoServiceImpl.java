@@ -5,6 +5,10 @@ import application.dto.alojamiento.CrearAlojamientoDTO;
 import application.dto.alojamiento.EditarAlojamientoDTO;
 import application.dto.alojamiento.FiltroBusquedaDTO;
 import application.dto.paginacion.PaginacionDTO;
+import application.exceptions.alojamiento.CrearAlojamientoException;
+import application.exceptions.alojamiento.EditarAlojamientoException;
+import application.exceptions.alojamiento.EliminarAlojamientoException;
+import application.exceptions.alojamiento.ObtenerAlojamientoException;
 import application.mappers.AlojamientoMapper;
 import application.model.Alojamiento;
 import application.model.Usuario;
@@ -37,22 +41,19 @@ public class AlojamientoServiceImpl implements AlojamientoService {
     private final UsuarioRepository usuarioRepository;
     private final AlojamientoMapper alojamientoMapper;
 
-    // ✅ CREAR ALOJAMIENTO
+    //  CREAR ALOJAMIENTO
     @Override
-    public AlojamientoDTO crearAlojamiento(String hostId, CrearAlojamientoDTO dto) {
+    public AlojamientoDTO crearAlojamiento(String hostId, CrearAlojamientoDTO dto) throws CrearAlojamientoException {
         try {
-            // Validar que el usuario existe y es anfitrión
-            Usuario anfitrion = usuarioRepository.findById(Long.valueOf((hostId)))
-                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            Usuario anfitrion = usuarioRepository.findById(Long.valueOf(hostId))
+                    .orElseThrow(() -> new CrearAlojamientoException("Usuario no encontrado"));
 
             if (anfitrion.getRol() != application.model.enums.Role.ANFITRION) {
                 throw new IllegalArgumentException("El usuario debe ser anfitrión para crear alojamientos");
             }
 
-            // Validar datos del alojamiento
             validarDatosAlojamiento(dto);
 
-            // Crear alojamiento
             Alojamiento alojamiento = new Alojamiento();
             alojamiento.setNombre(dto.nombre());
             alojamiento.setDescripcion(dto.descripcion());
@@ -67,30 +68,20 @@ public class AlojamientoServiceImpl implements AlojamientoService {
             alojamiento.setAnfitrion(anfitrion);
             alojamiento.setActivo(true);
             alojamiento.setFechaCreacion(LocalDateTime.now());
-
-            // Agregar servicios si existen
-            if (dto.servicios() != null) {
-                alojamiento.setServicios(dto.servicios());
-            }
-
-            // Agregar imágenes si existen
-            if (dto.imagenes() != null) {
-                alojamiento.setImagenes(dto.imagenes());
-            }
+            alojamiento.setServicios(dto.servicios());
+            alojamiento.setImagenes(dto.imagenes());
 
             Alojamiento alojamientoGuardado = alojamientoRepository.save(alojamiento);
             log.info("Alojamiento creado exitosamente: {}", alojamientoGuardado.getId());
 
             return alojamientoMapper.toDTO(alojamientoGuardado);
 
-        } catch (IllegalArgumentException e) {
-            log.error("Error validando datos del alojamiento: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
+        } catch (CrearAlojamientoException e) {
             log.error("Error creando alojamiento: {}", e.getMessage());
-            throw new RuntimeException("Error al crear alojamiento: " + e.getMessage());
+            throw e;
         }
     }
+
 
     // ✅ VALIDACIONES
     private void validarDatosAlojamiento(CrearAlojamientoDTO dto) {
@@ -111,12 +102,12 @@ public class AlojamientoServiceImpl implements AlojamientoService {
         }
     }
 
-    // ✅ OBTENER ALOJAMIENTO POR ID
+
     @Override
     @Transactional(readOnly = true)
-    public AlojamientoDTO obtenerAlojamiento(String alojamientoId) {
+    public AlojamientoDTO obtenerAlojamiento(String alojamientoId) throws ObtenerAlojamientoException {
         Alojamiento alojamiento = alojamientoRepository.findById(Long.valueOf(alojamientoId))
-                .orElseThrow(() -> new IllegalArgumentException("Alojamiento no encontrado"));
+                .orElseThrow(() -> new ObtenerAlojamientoException("Alojamiento no encontrado"));
 
         if (!alojamiento.getActivo()) {
             throw new IllegalArgumentException("El alojamiento no está disponible");
@@ -125,19 +116,17 @@ public class AlojamientoServiceImpl implements AlojamientoService {
         return alojamientoMapper.toDTO(alojamiento);
     }
 
-    // ✅ EDITAR ALOJAMIENTO
+
     @Override
-    public AlojamientoDTO editarAlojamiento(String alojamientoId, EditarAlojamientoDTO dto) {
+    public AlojamientoDTO editarAlojamiento(String alojamientoId, EditarAlojamientoDTO dto) throws EditarAlojamientoException {
         try {
             Alojamiento alojamiento = alojamientoRepository.findById(Long.valueOf(alojamientoId))
-                    .orElseThrow(() -> new IllegalArgumentException("Alojamiento no encontrado"));
+                    .orElseThrow(() -> new EditarAlojamientoException("Alojamiento no encontrado"));
 
-            // Validar que el alojamiento esté activo
             if (!alojamiento.getActivo()) {
                 throw new IllegalArgumentException("No se puede editar un alojamiento inactivo");
             }
 
-            // Actualizar campos permitidos
             if (dto.nombre() != null) {
                 alojamiento.setNombre(dto.nombre());
             }
@@ -180,19 +169,16 @@ public class AlojamientoServiceImpl implements AlojamientoService {
         }
     }
 
-    // ✅ ELIMINAR ALOJAMIENTO (BORRADO LÓGICO)
     @Override
-    public void eliminarAlojamiento(String alojamientoId) {
+    public void eliminarAlojamiento(String alojamientoId) throws EliminarAlojamientoException {
         try {
             Alojamiento alojamiento = alojamientoRepository.findById(Long.valueOf(alojamientoId))
-                    .orElseThrow(() -> new IllegalArgumentException("Alojamiento no encontrado"));
+                    .orElseThrow(() -> new EliminarAlojamientoException("Alojamiento no encontrado"));
 
-            // Validar que no tenga reservas futuras
             if (tieneReservasFuturas(alojamiento)) {
                 throw new IllegalArgumentException("No se puede eliminar un alojamiento con reservas futuras");
             }
 
-            // Borrado lógico
             alojamiento.setActivo(false);
             alojamientoRepository.save(alojamiento);
             log.info("Alojamiento eliminado (inactivado): {}", alojamientoId);
@@ -208,8 +194,7 @@ public class AlojamientoServiceImpl implements AlojamientoService {
 
     // ✅ VERIFICAR SI TIENE RESERVAS FUTURAS
     private boolean tieneReservasFuturas(Alojamiento alojamiento) {
-        // Esta implementación depende de tu ReservaRepository
-        // Ejemplo simplificado:
+
         return alojamiento.getReservas().stream()
                 .anyMatch(reserva ->
                         reserva.getCheckIn().isAfter(LocalDateTime.now().toLocalDate()) &&
@@ -218,7 +203,6 @@ public class AlojamientoServiceImpl implements AlojamientoService {
                 );
     }
 
-    // ✅ LISTAR ALOJAMIENTOS DE UN ANFITRIÓN
     @Override
     @Transactional(readOnly = true)
     public List<AlojamientoDTO> listarAlojamientosAnfitrion(String hostId) {
