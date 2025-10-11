@@ -16,6 +16,17 @@ public record CrearUsuarioDTO(
         @Length(max = 50) String telefono,
         @NotBlank @Length(min = 7, max = 100) String contrasenia,
         @Length(max = 300) String fotoPerfil,
-        @NotNull @Past LocalDate fechaNacimiento,
-        @NotNull Role rol
-) {}
+        @Past LocalDate fechaNacimiento,
+        Role rol
+
+
+) {
+    @Override
+    public String toString() {
+        return "CrearUsuarioDTO{" +
+                "nombre='" + nombre + '\'' +
+                ", email='" + email + '\'' +
+                ", fechaNacimiento=" + fechaNacimiento +
+                '}';
+    }
+}

@@ -158,7 +158,7 @@ public class ComentarioServiceImpl implements ComentarioService {
             Pageable pageable = PageRequest.of(
                     pagina,
                     size,
-                    Sort.by("fechaCreacion").descending()
+                    Sort.by("checkIn").descending()
             );
 
             Page<Comentario> page = comentarioRepository.findByAlojamientoIdAndActivoTrue(

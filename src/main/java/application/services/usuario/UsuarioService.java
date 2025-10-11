@@ -17,6 +17,7 @@ public interface UsuarioService {
 
     List<UsuarioDTO> obtenerTodos(String nombre, String correo, int pagina, int tamanio
     );
+
     UsuarioDTO actualizar(String id, EditarUsuarioDTO usuarioDTO) throws EmailEnUsoException;
 
     void cambiarContrasenia(String id, CambioContraseniaDTO cambioContraseniaDTO) throws UsuarioNoEncontradoException;
@@ -34,4 +35,5 @@ public interface UsuarioService {
     List<UsuarioDTO> buscarPorRol(String rol);
 
     boolean esAnfitrion(String id) throws UsuarioNoEncontradoException;
+    UsuarioDTO obtenerPorEmail(String email);
 }

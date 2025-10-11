@@ -7,6 +7,7 @@ import org.hibernate.validator.constraints.Length;
 import java.time.LocalDate;
 
 public record UsuarioDTO(
+        String id,
 
         @NotBlank
         @Length(max = 100) String nombre,

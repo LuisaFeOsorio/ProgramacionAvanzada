@@ -94,8 +94,4 @@ public interface AlojamientoRepository extends JpaRepository<Alojamiento, Long>,
             "a.activo = true")
     List<Alojamiento> findBySearchQuery(@Param("query") String query, Pageable pageable);
 
-    //  OBTENER ALOJAMIENTOS RECIENTES
-
-    List<Alojamiento> findTop10ByActivoTrueOrderByFechaCreacionDesc();
-
 }

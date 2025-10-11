@@ -12,7 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,18 +27,21 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    // ✅ CREAR USUARIO (PÚBLICO)
     @PostMapping
     public ResponseEntity<ResponseDTO<UsuarioDTO>> crearUsuario(
             @Valid @RequestBody CrearUsuarioDTO usuarioDTO) {
-
         try {
             UsuarioDTO usuarioCreado = usuarioService.crear(usuarioDTO);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ResponseDTO<>(false, "Usuario creado exitosamente", usuarioCreado));
+
         } catch (EmailEnUsoException | ValueConflictException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ResponseDTO<>(true, e.getMessage(), null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error interno del servidor", null));
         }
     }
 
@@ -44,9 +50,9 @@ public class UsuarioController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseDTO<List<UsuarioDTO>>> obtenerTodosUsuarios(
             @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String email,  // ✅ CORREGIDO: "email"
+            @RequestParam(required = false) String email,
             @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamanio) {  // ✅ CORREGIDO: "tamanio"
+            @RequestParam(defaultValue = "10") int tamanio) {
 
         List<UsuarioDTO> usuarios = usuarioService.obtenerTodos(nombre, email, pagina, tamanio);
         String mensaje = usuarios.isEmpty() ? "No se encontraron usuarios" : "Usuarios obtenidos exitosamente";
@@ -66,12 +72,20 @@ public class UsuarioController {
         }
     }
 
-    // ✅ ACTUALIZAR USUARIO (USUARIO PROPIETARIO O ADMIN)
+    // ✅ ACTUALIZAR USUARIO (USUARIO PROPIETARIO O ADMIN) - CORREGIDO
     @PutMapping("/{id}")
     @PreAuthorize("@usuarioSecurity.esMismoUsuario(#id) or hasRole('ADMIN')")
     public ResponseEntity<ResponseDTO<UsuarioDTO>> actualizarUsuario(
             @PathVariable String id,
             @Valid @RequestBody EditarUsuarioDTO usuarioDTO) {
+
+        System.out.println("✏️ === ACTUALIZAR USUARIO ===");
+        System.out.println("📥 ID del path: " + id);
+        System.out.println("📥 DTO recibido - Nombre: " + usuarioDTO.nombre() + ", Email: " + usuarioDTO.email());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("🔐 Authentication: " + auth);
+        System.out.println("👤 Principal: " + (auth != null ? auth.getPrincipal() : "null"));
 
         try {
             UsuarioDTO usuarioActualizado = usuarioService.actualizar(id, usuarioDTO);
@@ -79,6 +93,11 @@ public class UsuarioController {
         } catch (EmailEnUsoException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ResponseDTO<>(true, e.getMessage(), null));
+        } catch (Exception e) {
+            System.out.println("❌ Error en actualizarUsuario: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error interno: " + e.getMessage(), null));
         }
     }
 
@@ -200,15 +219,32 @@ public class UsuarioController {
         return ResponseEntity.ok(new ResponseDTO<>(false, mensaje, anfitriones));
     }
 
-    // ✅ OBTENER MI PERFIL (USUARIO AUTENTICADO)
+    // ✅ OBTENER MI PERFIL (USUARIO AUTENTICADO) - CORREGIDO
     @GetMapping("/me")
-    public ResponseEntity<ResponseDTO<UsuarioDTO>> obtenerMiPerfil(@AuthenticationPrincipal String usuarioId) {
+    public ResponseEntity<ResponseDTO<UsuarioDTO>> obtenerMiPerfil(@AuthenticationPrincipal UserDetails userDetails) {
         try {
-            UsuarioDTO usuario = usuarioService.obtenerPorId(usuarioId);
+            System.out.println("🔍 === OBTENER MI PERFIL ===");
+            System.out.println("UserDetails: " + userDetails);
+
+            if (userDetails == null) {
+                System.out.println("❌ UserDetails is null - authentication failed");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ResponseDTO<>(true, "No autenticado", null));
+            }
+
+            String email = userDetails.getUsername();
+            System.out.println("✅ Authenticated user: " + email);
+            System.out.println("✅ Authorities: " + userDetails.getAuthorities());
+
+            UsuarioDTO usuario = usuarioService.obtenerPorEmail(email);
+
             return ResponseEntity.ok(new ResponseDTO<>(false, "Perfil obtenido", usuario));
-        } catch (UsuarioNoEncontradoException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, e.getMessage(), null));
+
+        } catch (Exception e) {
+            System.out.println("❌ Error inesperado: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error interno", null));
         }
     }
 
@@ -221,6 +257,41 @@ public class UsuarioController {
         } catch (UsuarioNoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ResponseDTO<>(true, e.getMessage(), null));
+        }
+    }
+
+    // ✅ ENDPOINT TEMPORAL PARA ACTUALIZACIÓN (SIN SEGURIDAD)
+    @PutMapping("/{id}/temp")
+
+    public ResponseEntity<ResponseDTO<UsuarioDTO>> actualizarUsuarioTemp(
+            @PathVariable String id,
+            @RequestBody EditarUsuarioDTO usuarioDTO) {
+
+        System.out.println("🎯 === ACTUALIZACIÓN TEMPORAL - INICIANDO ===");
+        System.out.println("📥 ID recibido: " + id);
+        System.out.println("📥 DTO - Nombre: " + usuarioDTO.nombre());
+        System.out.println("📥 DTO - Email: " + usuarioDTO.email());
+        System.out.println("📥 DTO - Teléfono: " + usuarioDTO.telefono());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("🔐 Usuario autenticado: " + (auth != null ? auth.getName() : "null"));
+
+        try {
+            System.out.println("🔄 Llamando a usuarioService.actualizar()...");
+            UsuarioDTO usuarioActualizado = usuarioService.actualizar(id, usuarioDTO);
+            System.out.println("✅ Usuario actualizado exitosamente: " + usuarioActualizado.nombre());
+            return ResponseEntity.ok(new ResponseDTO<>(false, "Usuario actualizado exitosamente (temp)", usuarioActualizado));
+
+        } catch (EmailEnUsoException e) {
+            System.out.println("❌ Email en uso: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ResponseDTO<>(true, e.getMessage(), null));
+        } catch (Exception e) {
+            System.out.println("💥 ERROR CRÍTICO en actualización: " + e.getClass().getSimpleName());
+            System.out.println("💥 Mensaje: " + e.getMessage());
+            e.printStackTrace(); // ⭐⭐ ESTO ES CRÍTICO ⭐⭐
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error: " + e.getMessage(), null));
         }
     }
 }

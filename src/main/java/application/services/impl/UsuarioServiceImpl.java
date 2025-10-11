@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import application.repositories.UsuarioRepository;
 import application.services.usuario.UsuarioService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,6 +85,27 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarios.stream()
                 .map(usuarioMapping::toDTO)
                 .collect(Collectors.toList());
+    }
+
+
+    // En UsuarioServiceImpl
+    @Override
+    public UsuarioDTO obtenerPorEmail(String email) {
+        System.out.println("🔍 Buscando usuario por email: " + email);
+
+        Usuario usuario = null;
+        try {
+            usuario = usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> {
+                        System.out.println("❌ Usuario no encontrado con email: " + email);
+                        return new UsuarioNoEncontradoException("Usuario no encontrado");
+                    });
+        } catch (UsuarioNoEncontradoException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("✅ Usuario encontrado: " + usuario.getNombre());
+        return usuarioMapping.toDTO(usuario);
     }
 
     // ✅ ACTUALIZAR USUARIO
