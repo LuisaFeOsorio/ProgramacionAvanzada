@@ -1,0 +1,113 @@
+
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+# @name crearUsuario1
+POST {{baseUrl}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Sofia Gonzales",
+  "email": "gonzales@example.com",
+  "telefono": "+573001234567",
+  "contrasenia": "SofiaPassword123!",
+  "fotoPerfil": "https://example.com/Sofia.jpg",
+  "fechaNacimiento": "1995-05-20"
+}
+
+### ERROR 400 - Validación fallida
+POST {{baseUrl}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "",
+  "email": "email-invalido",
+  "contrasenia": "123",
+  "fechaNacimiento": "2050-01-01"
+}
+
+### ERROR 409 - Email duplicado
+
+POST {{baseUrl}}/api/usuarios
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Otro Usuario",
+  "email": "gonzales@example.com",
+  "contrasenia": "Password123!",
+  "fechaNacimiento": "1990-01-01"
+}
+
+
+### LOGIN - Con formato específico
+# @name loginTest
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "gonzales@example.com",
+  "contrasenia": "SofiaPassword123!"
+}
+
+###
+@userToken =eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsImVtYWlsIjoiZ29uemFsZXNAZXhhbXBsZS5jb20iLCJzdWIiOiJnb256YWxlc0BleGFtcGxlLmNvbSIsImlhdCI6MTc2MDIxNzEzNCwiZXhwIjoxNzYwMjIwNzM0fQ.hSfw4LPgge3WD2jFC0i8hhHb9ohe5SAPLsYGitI-2o0
+
+### LOGIN - Credenciales incorrectas (Error 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "gonzales@example.com",
+  "contrasenia": "incorrecta"
+}
+
+### VERIFICAR TOKEN JWT (Endpoint opcional)
+# @name verifyToken
+POST {{baseUrl}}/api/auth/verify
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+
+### OBTENER MI PERFIL - Requiere autenticación
+# @name obtenerMiPerfil
+GET {{baseUrl}}/api/usuarios/me
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+
+### ACTUALIZAR USUARIO - Requiere ser el propietario
+# @name actualizarUsuario
+PUT {{baseUrl}}/api/usuarios/6/temp
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+{
+  "nombre": "Sofia (Actualizado)",
+  "email": "gonzales@example.com",
+  "telefono": "+573009876543"
+}
+
+### VOLVERSE ANFITRIÓN - Requiere ser el propietario
+# @name volverseAnfitrion
+PATCH {{baseUrl}}/api/usuarios/7/volver-anfitrion
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+{
+  "descripcionPersonal": "Soy una anfitriona profesional con 5 años de experiencia",
+  "documentoIdentidad": "1234567890",
+  "archivoDocumentos": "documentos-ana.pdf"
+}
+
+### ACTUALIZAR INFORMACIÓN ANFITRIÓN
+# @name actualizarAnfitrion
+PUT {{baseUrl}}/api/usuarios/6/informacion-anfitrion
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+{
+  "descripcionPersonal": "Anfitriona premium con amplia experiencia en hospitalidad",
+  "documentoIdentidad": "1234567890",
+  "archivoDocumentos": "documentos-actualizados.pdf"
+}
+

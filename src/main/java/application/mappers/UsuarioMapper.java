@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UsuarioMapper {
 
-    // ✅ Mapeo para creación - IGNORAR campos que se setean en el servicio
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "activo", ignore = true)
     @Mapping(target = "rol", ignore = true)
@@ -23,11 +22,9 @@ public interface UsuarioMapper {
     @Mapping(target = "comentarios", ignore = true)
     Usuario toEntity(CrearUsuarioDTO crearUsuarioDTO);
 
-    // ✅ Mapeo para DTO completo
     @Mapping(source = "rol", target = "rol")
     UsuarioDTO toDTO(Usuario usuario);
 
-    // ✅ Mapeo para actualización - solo campos editables
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "email", ignore = true) // El email no se debería poder editar fácilmente
     @Mapping(target = "contrasenia", ignore = true) // La contraseña se cambia con endpoint específico

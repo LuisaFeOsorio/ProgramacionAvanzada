@@ -20,7 +20,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long>, JpaSpec
     @Query("SELECT COUNT(r) > 0 FROM Reserva r WHERE " +
             "r.alojamiento.id = :alojamientoId AND " +
             "r.estado IN :estados AND " +
-            "((r.checkIn < :checkOut AND r.checkOut > :checkIn))") // CORREGIDO: < y > en lugar de <= y >=
+            "((r.checkIn < :checkOut AND r.checkOut > :checkIn))")
     boolean existsByAlojamientoIdAndFechasSolapadas(
             @Param("alojamientoId") Long alojamientoId,
             @Param("checkIn") LocalDate checkIn,
@@ -49,8 +49,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long>, JpaSpec
     // ✅ RESERVAS POR USUARIO Y ESTADO (ÚTIL PARA FILTROS)
     Page<Reserva> findByUsuarioIdAndEstado(Long usuarioId, EstadoReserva estado, Pageable pageable);
 
-    // ✅ RESERVAS POR USUARIO (LISTA SIMPLE)
-    List<Reserva> findByUsuarioIdOrderByFechaCreacionDesc(Long usuarioId);
+    // ✅ RESERVAS POR USUARIO (LISTA SIMPLE) - CORREGIDO
+    List<Reserva> findByUsuarioIdOrderByCheckInDesc(Long usuarioId);
 
     // ✅ RESERVAS POR ANFITRIÓN (PAGINADO)
     @Query("SELECT r FROM Reserva r WHERE r.alojamiento.anfitrion.id = :anfitrionId")
@@ -100,4 +100,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long>, JpaSpec
     // ✅ RESERVAS QUE REQUIEREN ATENCIÓN (PENDIENTES DE ANFITRIÓN)
     @Query("SELECT r FROM Reserva r WHERE r.alojamiento.anfitrion.id = :anfitrionId AND r.estado = 'PENDIENTE'")
     List<Reserva> findReservasPendientesPorAnfitrion(@Param("anfitrionId") Long anfitrionId);
+
+    // ✅ MÉTODO PARA VALIDAR SI UNA RESERVA PERTENECE A UN USUARIO
+    boolean existsByIdAndUsuarioId(Long id, Long usuarioId);
 }

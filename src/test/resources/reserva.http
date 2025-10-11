@@ -1,0 +1,45 @@
+@authToken = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsImVtYWlsIjoiZ29uemFsZXNAZXhhbXBsZS5jb20iLCJzdWIiOiJnb256YWxlc0BleGFtcGxlLmNvbSIsImlhdCI6MTc2MDIyMTIzMywiZXhwIjoxNzYwMjI0ODMzfQ.HXLeiNwSsrIlKDkcZnWkwc9oU-DgFSJiHRh0AO2B8N0
+@baseUrl = http://localhost:8080
+
+# @name crearReserva
+POST {{baseUrl}}/api/reservas
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "checkIn": "2025-10-15",
+  "checkOut": "2025-10-18",
+  "numeroHuespedes": 2,
+  "alojamientoId": "2",
+  "serviciosExtras": ["DESAYUNO", "WIFI"]
+}
+
+### Crear reserva (fecha inválida → error 400)
+POST http://localhost:8080/api/reservas
+Content-Type: application/json
+
+{
+  "checkIn": "2025-10-20",
+  "checkOut": "2025-10-18",
+  "numeroHuespedes": 2,
+  "alojamientoId": "2",
+  "serviciosExtras": []
+}
+
+### Crear reserva (alojamiento inexistente → error 404)
+POST http://localhost:8080/api/reservas
+Content-Type: application/json
+
+{
+  "checkIn": "2025-10-15",
+  "checkOut": "2025-10-18",
+  "numeroHuespedes": 2,
+  "alojamientoId": "999",
+  "serviciosExtras": []
+}
+
+### Consultar reserva por ID
+GET http://localhost:8080/api/reservas/1
+
+### Eliminar reserva
+DELETE http://localhost:8080/api/reservas/1

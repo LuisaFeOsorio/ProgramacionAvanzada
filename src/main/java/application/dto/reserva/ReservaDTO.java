@@ -16,73 +16,43 @@ import java.util.List;
 @Getter
 @Setter
 public class ReservaDTO {
-    @NotBlank
-    @Length(max = 100)
-    private String id;
+    @NotBlank @Length(max = 100) private String id;
 
-    @NotNull
-    private LocalDate checkIn;
+    @NotNull private LocalDate checkIn;
 
-    @NotNull
-    private LocalDate checkOut;
+    @NotNull private LocalDate checkOut;
 
-    @NotNull
-    @Positive
-    private Integer numeroHuespedes;
+    @NotNull @Positive private Integer numeroHuespedes;
 
-    @NotNull
-    private EstadoReserva estado;
+    @NotNull private EstadoReserva estado;
 
-    @NotNull
-    private List<Servicio> serviciosExtras;
+    @NotNull private List<Servicio> serviciosExtras;
 
     // Información del usuario
-    @NotBlank
-    @Length(max = 100)
-    private String usuarioId;
+    @NotBlank @Length(max = 100) private String usuarioId;
 
-    @NotBlank
-    @Length(max = 100)
-    private String usuarioNombre;
+    @NotBlank @Length(max = 100) private String usuarioNombre;
 
-    @NotBlank
-    @Length(max = 100)
-    private String usuarioEmail;
+    @NotBlank @Length(max = 100) private String usuarioEmail;
 
     // Información del alojamiento
-    @NotBlank
-    @Length(max = 100)
-    private String alojamientoId;
+    @NotBlank @Length(max = 100) private String alojamientoId;
 
-    @NotBlank
-    @Length(max = 100)
-    private String alojamientoNombre;
+    @NotBlank @Length(max = 100) private String alojamientoNombre;
 
-    @NotBlank
-    @Length(max = 255)
-    private String alojamientoDireccion;
+    @NotBlank @Length(max = 255) private String alojamientoDireccion;
 
-    @NotNull
-    @Positive
-    private Double precioPorNoche;
+    @NotNull @Positive private Double precioPorNoche;
 
-    @NotNull
-    @Positive
-    private Double precioTotal;
+    @NotNull @Positive private Double precioTotal;
 
     // Información del anfitrión
-    @NotBlank
-    @Length(max = 100)
-    private String anfitrionId;
+    @NotBlank @Length(max = 100) private String anfitrionId;
 
-    @NotBlank
-    @Length(max = 100)
-    private String anfitrionNombre;
+    @NotBlank @Length(max = 100) private String anfitrionNombre;
 
     // Información de comentarios
-    @NotNull
-    private Boolean tieneComentario;
+    @NotNull private Boolean tieneComentario;
 
-    @Positive
-    private Integer calificacion;
+    @Positive private Integer calificacion;
 }

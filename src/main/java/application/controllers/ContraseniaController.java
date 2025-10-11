@@ -51,8 +51,6 @@ public class ContraseniaController {
                 .body(new ResponseDTO<>(true, ex.getMessage(), null));
     }
 
-    // 🔧 DTOs PARA LAS SOLICITUDES
-
     public record SolicitarCodigoDTO(
             @jakarta.validation.constraints.Email(message = "El formato del email no es válido")
             @jakarta.validation.constraints.NotBlank(message = "El email es requerido")

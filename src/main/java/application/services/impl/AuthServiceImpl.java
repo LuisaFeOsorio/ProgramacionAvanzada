@@ -34,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
 
         Usuario user = optionalUser.get();
 
-        if (!passwordEncoder.matches(request.contrasena(), user.getContrasenia())) {
+        if (!passwordEncoder.matches(request.contrasenia(), user.getContrasenia())) {
             throw new Exception("El usuario o contraseña no son válidos");
         }
 
@@ -67,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
         user = userRepository.save(user);
 
         return new UsuarioDTO(
+                user.getId().toString(),
                 user.getNombre(),
                 user.getEmail(),
                 user.getTelefono(),
