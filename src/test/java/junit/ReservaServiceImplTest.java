@@ -78,7 +78,7 @@ class ReservaServiceImplTest {
         reserva.setEstado(EstadoReserva.PENDIENTE);
     }
 
-    // ✅ TEST 1: Crear reserva correctamente
+    //  Crear reserva correctamente
     @Test
     void crearReserva_datosValidos_creaReservaYNotifica() throws Exception {
         CrearReservaDTO dto = new CrearReservaDTO(
@@ -139,7 +139,7 @@ class ReservaServiceImplTest {
         verify(notificacionesService, atLeastOnce()).crearNotificacionAnfitrion(any(), any(), any());
     }
 
-    // ❌ TEST 4: No se puede cancelar una reserva ya cancelada
+    //  No se puede cancelar una reserva ya cancelada
     @Test
     void cancelarReserva_yaCancelada_lanzaExcepcion() {
         reserva.setEstado(EstadoReserva.CANCELADA);

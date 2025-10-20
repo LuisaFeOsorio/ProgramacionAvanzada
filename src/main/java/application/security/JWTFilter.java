@@ -1,6 +1,5 @@
 package application.security;
 
-import application.security.JWTUtils;
 import application.services.impl.UserDetailsServiceImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -34,7 +33,6 @@ public class JWTFilter extends OncePerRequestFilter {
         System.out.println("Path: " + request.getServletPath());
         System.out.println("Method: " + request.getMethod());
 
-        // ⭐⭐ MOSTRAR TODOS LOS HEADERS ⭐⭐
         System.out.println("=== HEADERS ===");
         Collections.list(request.getHeaderNames()).forEach(headerName -> {
             System.out.println(headerName + ": " + request.getHeader(headerName));
@@ -44,33 +42,29 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = getToken(request);
 
         if (token == null) {
-            System.out.println("❌ NO TOKEN FOUND - Headers above should show Authorization");
+            System.out.println(" NO TOKEN FOUND - Headers above should show Authorization");
             chain.doFilter(request, response);
             return;
 
         }
 
         try {
-            System.out.println("🔐 Token found, validating...");
+            System.out.println(" Token found, validating...");
 
-            // Validar el token y obtener el payload
             Jws<Claims> payload = jwtUtil.parseJwt(token);
             String username = payload.getBody().getSubject();
 
-            System.out.println("🔐 Token validated for user: " + username);
+            System.out.println(" Token validated for user: " + username);
 
-            // Si el usuario no está autenticado, crear autenticación
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                System.out.println("🔐 Loading user details for: " + username);
+                System.out.println(" Loading user details for: " + username);
 
-                // Cargar usuario desde UserDetailsService
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                System.out.println("🔐 User details loaded: " + userDetails.getUsername());
-                System.out.println("🔐 Authorities: " + userDetails.getAuthorities());
+                System.out.println(" User details loaded: " + userDetails.getUsername());
+                System.out.println(" Authorities: " + userDetails.getAuthorities());
 
-                // Crear objeto de autenticación
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
@@ -86,7 +80,7 @@ public class JWTFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            System.out.println("❌ JWT validation failed: " + e.getMessage());
+            System.out.println(" JWT validation failed: " + e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: " + e.getMessage());
             return;
         }
@@ -100,12 +94,10 @@ public class JWTFilter extends OncePerRequestFilter {
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7).trim();
-
-            // ⭐⭐ LIMPIAR EL TOKEN DE COMILLAS Y ESPACIOS ⭐⭐
             token = cleanToken(token);
 
-            System.out.println("✅ Cleaned token: " + token.substring(0, Math.min(20, token.length())) + "...");
-            System.out.println("✅ Token length: " + token.length());
+            System.out.println(" Cleaned token: " + token.substring(0, Math.min(20, token.length())) + "...");
+            System.out.println(" Token length: " + token.length());
 
             return token;
         } else {
@@ -117,17 +109,13 @@ public class JWTFilter extends OncePerRequestFilter {
     private String cleanToken(String token) {
         if (token == null) return null;
 
-        // Remover comillas dobles al inicio y final
         if (token.startsWith("\"") && token.endsWith("\"")) {
             token = token.substring(1, token.length() - 1);
         }
 
-        // Remover comillas simples al inicio y final
         if (token.startsWith("'") && token.endsWith("'")) {
             token = token.substring(1, token.length() - 1);
         }
-
-        // Remover espacios en blanco
         token = token.trim();
 
         return token;

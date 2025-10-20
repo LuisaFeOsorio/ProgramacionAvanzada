@@ -161,7 +161,7 @@ class ComentarioServiceImplTest {
         Usuario otro = new Usuario();
         otro.setId(777L);
 
-        reserva.setUsuario(otro); // reserva hecha por otro usuario
+        reserva.setUsuario(otro);
 
         when(usuarioRepository.findById(100L)).thenReturn(Optional.of(usuario));
         when(reservaRepository.findById(300L)).thenReturn(Optional.of(reserva));

@@ -14,7 +14,7 @@ class ImagenServiceImplTest {
 
     @Test
     void testUploadImage() throws Exception {
-        // 1. Configurar cloudinary con tus credenciales
+        //  Configurar cloudinary con tus credenciales
         Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
                 "cloud_name", "dzjtafatn",
                 "api_key", "255329149496492",
@@ -30,9 +30,6 @@ class ImagenServiceImplTest {
         assertNotNull(uploadResult.get("url"));
         System.out.println("✅ Imagen subida correctamente: " + uploadResult.get("url"));
 
-//        String publicId = (String) uploadResult.get("public_id");
-//        cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
-//        System.out.println("🗑 Imagen borrada con public_id: " + publicId);
     }
 }
 

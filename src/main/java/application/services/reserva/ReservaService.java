@@ -11,13 +11,7 @@ import application.exceptions.reserva.ReservasNoObtenidasException;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Servicio para la gestión de reservas del sistema.
- * Maneja la creación, consulta, cancelación y aprobación de reservas,
- * así como los listados para usuarios y anfitriones.
- */
 public interface ReservaService {
-
 
     ReservaDTO crearReserva(String usuarioId, CrearReservaDTO dto) throws ReservaNoCreadaException;
 
