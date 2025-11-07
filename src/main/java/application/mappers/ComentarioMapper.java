@@ -10,7 +10,7 @@ public interface ComentarioMapper {
 
     // ✅ MAPEO A DTO SIMPLIFICADO
     @Mapping(target = "usuarioNombre", source = "usuario.nombre")
-    @Mapping(target = "usuarioFoto", source = "usuario.fotoPerfil")
+    @Mapping(target = "usuarioFoto", source = "usuario.foto_perfil")
     @Mapping(target = "usuarioId", source = "usuario.id")
     @Mapping(target = "alojamientoNombre", source = "alojamiento.nombre")
     @Mapping(target = "alojamientoId", source = "alojamiento.id")

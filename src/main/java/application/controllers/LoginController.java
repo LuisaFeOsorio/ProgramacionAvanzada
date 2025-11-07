@@ -5,6 +5,7 @@ import application.dto.ResponseDTO;
 import application.security.JWTUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,46 +25,29 @@ public class LoginController {
     private final JWTUtils jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<ResponseDTO<String>> login(@RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<ResponseDTO<String>> login(@RequestBody LoginDTO loginDTO) {
         try {
-            System.out.println("🔐 === LOGIN ATTEMPT - RAW BODY ===");
-            System.out.println("Request Body: " + requestBody);
+            System.out.println("🔐 === LOGIN ATTEMPT ===");
+            System.out.println("Email: " + loginDTO.email());
+            System.out.println("Contraseña: " + loginDTO.contrasenia());
 
-            // Extraer manualmente los campos
-            String email = (String) requestBody.get("email");
-            String contrasenia = (String) requestBody.get("contrasenia");
-
-            System.out.println("Email extraído: " + email);
-            System.out.println("Contraseña extraída: " + contrasenia);
-
-            if (email == null || contrasenia == null) {
-                System.out.println("❌ Campos faltantes en JSON");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseDTO<>(true, "Email y contraseña son requeridos", null));
-            }
-
-            // Validación manual
-            if (email.isBlank() || contrasenia.isBlank()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ResponseDTO<>(true, "Email y contraseña no pueden estar vacíos", null));
-            }
-
-            // Resto de la lógica de autenticación...
+            // Autenticar usuario
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, contrasenia)
+                    new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.contrasenia())
             );
 
             System.out.println("✅ === AUTHENTICATION SUCCESSFUL ===");
 
-            // Generar claims
+            // Generar claims y token
             Map<String, String> claims = new HashMap<>();
-            claims.put("email", email);
-            claims.put("role", "USER");
+            claims.put("email", loginDTO.email());
+            claims.put("role", "ANFITRION"); // Ajusta según el rol real
 
-            // Generar token JWT
-            String token = jwtUtil.generateToken(email, claims);
+            String token = jwtUtil.generateToken(loginDTO.email(), claims);
+            System.out.println("🎉 TOKEN CREADO Y ENVIADO");
 
-            return ResponseEntity.ok(new ResponseDTO<>(false, "Login exitoso", token));
+            ResponseDTO<String> response = new ResponseDTO<>(false, "Login exitoso", token);
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             System.out.println("❌ === LOGIN FAILED ===");
@@ -72,6 +56,14 @@ public class LoginController {
                     .body(new ResponseDTO<>(true, "Credenciales inválidas", null));
         }
     }
+
+    // Endpoint para desarrollo - crear usuario de prueba
+    @PostMapping("/create-test-user")
+    public ResponseEntity<String> createTestUser() {
+
+        return ResponseEntity.ok("Endpoint para crear usuario de prueba");
+    }
+
     // Endpoint opcional para verificar token
     @PostMapping("/verify")
     public ResponseEntity<ResponseDTO<Boolean>> verifyToken(@RequestHeader("Authorization") String token) {

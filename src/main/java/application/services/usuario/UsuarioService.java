@@ -1,11 +1,12 @@
 package application.services.usuario;
 
-import java.util.List;
 import application.dto.contrasenia.CambioContraseniaDTO;
 import application.dto.usuario.*;
 import application.exceptions.ValueConflictException;
 import application.exceptions.usuario.EmailEnUsoException;
 import application.exceptions.usuario.UsuarioNoEncontradoException;
+
+import java.util.List;
 
 public interface UsuarioService {
 
@@ -13,7 +14,7 @@ public interface UsuarioService {
 
     UsuarioDTO obtenerPorId(String id) throws UsuarioNoEncontradoException;
 
-    void eliminar(String id)throws UsuarioNoEncontradoException;
+    void eliminar(String id) throws UsuarioNoEncontradoException;
 
     List<UsuarioDTO> obtenerTodos(String nombre, String correo, int pagina, int tamanio
     );
@@ -22,9 +23,13 @@ public interface UsuarioService {
 
     void cambiarContrasenia(String id, CambioContraseniaDTO cambioContraseniaDTO) throws UsuarioNoEncontradoException;
 
-    UsuarioDTO cambiarEstado(String id)throws UsuarioNoEncontradoException;
+    UsuarioDTO cambiarEstado(String id) throws UsuarioNoEncontradoException;
 
-    UsuarioDTO volverseAnfitrion(String id, VolverseAnfitrionDTO anfitrionDTO)throws UsuarioNoEncontradoException;
+    boolean existePorEmail(String email);
+
+    void restablecerContrasenia(String email, String nuevaContrasenia);
+
+    UsuarioDTO volverseAnfitrion(String id, VolverseAnfitrionDTO anfitrionDTO) throws UsuarioNoEncontradoException;
 
     UsuarioDTO actualizarInformacionAnfitrion(String id, ActualizarAnfitrionDTO anfitrionDTO) throws UsuarioNoEncontradoException;
 
@@ -35,5 +40,6 @@ public interface UsuarioService {
     List<UsuarioDTO> buscarPorRol(String rol);
 
     boolean esAnfitrion(String id) throws UsuarioNoEncontradoException;
+
     UsuarioDTO obtenerPorEmail(String email);
 }

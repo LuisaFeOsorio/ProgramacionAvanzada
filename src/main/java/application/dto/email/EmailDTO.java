@@ -1,8 +1,8 @@
 package application.dto.email;
 
 public record EmailDTO(
-        String recipient,
-        String body,
-        String subject
+        String recipient,  // destinatario
+        String subject,    // asunto (corto)
+        String body
 ) {
 }

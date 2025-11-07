@@ -47,6 +47,21 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioMapping.toDTO(usuarioGuardado);
 
     }
+    @Override
+    public boolean existePorEmail(String email) {
+        return usuarioRepository.existsByEmail(email);
+    }
+
+    @Override
+    public void restablecerContrasenia(String email, String nuevaContrasenia) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
+        usuarioRepository.save(usuario);
+
+        System.out.println("✅ Contraseña restablecida para: " + email);
+    }
 
     @Override
     public UsuarioDTO obtenerPorId(String id) throws UsuarioNoEncontradoException {

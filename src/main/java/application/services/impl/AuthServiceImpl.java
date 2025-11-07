@@ -53,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(dto.email());
         user.setTelefono(dto.telefono());
         user.setContrasenia(passwordEncoder.encode(dto.contrasenia()));
-        user.setFotoPerfil(dto.fotoPerfil());
+        user.setFoto_perfil(dto.foto_perfil());
         user.setFechaNacimiento(dto.fechaNacimiento());
         user.setRol(dto.rol() != null ? dto.rol() : Role.USUARIO);
 
@@ -72,7 +72,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getTelefono(),
                 user.getContrasenia(), // Nota: Considera no retornar la contraseña por seguridad
-                user.getFotoPerfil(),
+                user.getFoto_perfil(),
                 user.getFechaNacimiento(),
                 user.getRol(),
                 user.getActivo(),

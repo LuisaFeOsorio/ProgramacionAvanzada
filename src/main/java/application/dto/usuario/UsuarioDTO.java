@@ -24,6 +24,7 @@ public record UsuarioDTO(
         @NotNull @Past LocalDate fechaNacimiento,
 
         @NotNull Role rol,
+        
         Boolean activo,
 
         @Length(max = 500) String descripcionPersonal,

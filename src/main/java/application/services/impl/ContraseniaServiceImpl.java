@@ -21,11 +21,7 @@ public class ContraseniaServiceImpl implements ContraseniaService {
     private final UsuarioRepository usuarioRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-
-    // Almacenamiento temporal de códigos (en producción usar Redis)
     private final Map<String, CodigoRecuperacion> codigosRecuperacion = new ConcurrentHashMap<>();
-
-    // Configuración
     private static final int LONGITUD_CODIGO = 6;
     private static final int TIEMPO_EXPIRACION_MINUTOS = 15;
 

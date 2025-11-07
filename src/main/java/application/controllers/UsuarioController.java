@@ -6,10 +6,13 @@ import application.dto.contrasenia.CambioContraseniaDTO;
 import application.exceptions.ValueConflictException;
 import application.exceptions.usuario.EmailEnUsoException;
 import application.exceptions.usuario.UsuarioNoEncontradoException;
+import application.services.imagen.ImagenService;
+import application.services.impl.ImageServiceImpl;
 import application.services.usuario.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -17,7 +20,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import application.model.enums.Role;
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -26,24 +32,54 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    Role role;
+    private final ImageServiceImpl imagenService;
 
-    @PostMapping
+    @PostMapping(value = "/registro", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ResponseDTO<UsuarioDTO>> crearUsuario(
-            @Valid @RequestBody CrearUsuarioDTO usuarioDTO) {
+            @RequestPart("nombre") String nombre,
+            @RequestPart("apellido") String apellido,
+            @RequestPart("email") String email,
+            @RequestPart(value = "telefono", required = false) String telefono,
+            @RequestPart("fechaNacimiento") String fechaNacimientoStr,
+            @RequestPart("contrasenia") String contrasenia,
+            @RequestPart(value = "fotoPerfil", required = false) MultipartFile fotoPerfil) {
+
         try {
+            // Convertir fecha de nacimiento
+            LocalDate fechaNacimiento = LocalDate.parse(fechaNacimientoStr);
+
+            // Subir imagen si existe
+            String fotoPerfilUrl = null;
+            if (fotoPerfil != null && !fotoPerfil.isEmpty()) {
+                fotoPerfilUrl = imagenService.upload(fotoPerfil).toString();
+            }
+
+            CrearUsuarioDTO usuarioDTO = new CrearUsuarioDTO(
+                    nombre + " " + apellido,
+                    email,
+                    telefono != null ? telefono : "",
+                    contrasenia,
+                    fotoPerfilUrl != null ? fotoPerfilUrl : "",
+                    fechaNacimiento,
+                    Role.USUARIO
+            );
+
             UsuarioDTO usuarioCreado = usuarioService.crear(usuarioDTO);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ResponseDTO<>(false, "Usuario creado exitosamente", usuarioCreado));
 
-        } catch (EmailEnUsoException | ValueConflictException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseDTO<>(true, e.getMessage(), null));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error al procesar la imagen: " + e.getMessage(), null));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO<>(true, "Error interno del servidor", null));
+                    .body(new ResponseDTO<>(true, "Error interno del servidor: " + e.getMessage(), null));
         }
     }
+
 
     // ✅ OBTENER TODOS LOS USUARIOS (SOLO ADMIN)
     @GetMapping

@@ -22,7 +22,7 @@ longitud y latitud, que se muestre un mapa, el de click donde quiere y nosotros 
 HACER HOST PROFILE, AGREGAR STATUS AL USUARIO NORMAL, SERVICIOS DE LAS RESERVAS, PICINA, PARQUEADERO...
 CREAR UN ALOJAMIENTO E IR AGREGANDO SERVICIOS
 
-SMTP PASSWORD:wzyj aeda vlmw siig
+SMTP PASSWORD:lrap tzji ctyf swvh
 SMTP_USERNAME pruebaprogramaciondl@gmail.com
 
 CLOUD (IMAGENGES)

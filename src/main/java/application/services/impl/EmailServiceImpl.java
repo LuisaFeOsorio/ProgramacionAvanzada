@@ -2,454 +2,238 @@ package application.services.impl;
 
 import application.dto.email.EmailDTO;
 import application.model.Reserva;
-import application.model.Usuario;
 import application.services.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.email.EmailBuilder;
+import org.simplejavamail.mailer.MailerBuilder;
+import org.simplejavamail.api.mailer.config.TransportStrategy;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-    private final Mailer mailer;
+    @Value("${smtp.host:smtp.gmail.com}")
+    private String smtpHost;
 
-    private static final String REMITENTE_NOMBRE = "Plataforma de Reservas";
-    private static final String REMITENTE_EMAIL = "noreply@miplataforma.com";
+    @Value("${smtp.port:587}")
+    private int smtpPort;
+
+    @Value("${smtp.username:pruebasprogramaciondl@gmail.com}")
+    private String smtpUsername;
+
+    @Value("${smtp.password:lrap tzji ctyf swvh}") // Tu contraseña de aplicación de 16 caracteres SIN espacios
+    private String smtpPassword;
+
+    @Value("${smtp.from.name:Plataforma de Reservas}")
+    private String smtpFromName;
+
+    @Async
 
     @Override
-    public void enviarConfirmacionReserva(Reserva reserva) {
+    public void sendMail(EmailDTO emailDTO) throws Exception {
+        System.out.println("📧 Preparando envío a: " + emailDTO.recipient());
+        System.out.println("📝 Asunto: " + emailDTO.subject());
+        System.out.println("📄 Contenido (primeros 50 chars): " +
+                (emailDTO.body() != null ? emailDTO.body().substring(0, Math.min(50, emailDTO.body().length())) : "null"));
+
+        var email = EmailBuilder.startingBlank()
+                .from(smtpFromName, smtpUsername)
+                .to(emailDTO.recipient())
+                .withSubject(emailDTO.subject()) // Solo el título aquí
+                .withPlainText(emailDTO.body())   // El contenido aquí
+                .buildEmail();
+
+        try {
+            Mailer mailer = MailerBuilder
+                    .withSMTPServer(smtpHost, smtpPort, smtpUsername, smtpPassword)
+                    .withTransportStrategy(TransportStrategy.SMTP_TLS)
+                    .withSessionTimeout(10 * 1000)
+                    .withDebugLogging(true)
+                    .buildMailer();
+
+            mailer.sendMail(email);
+            System.out.println("✅ Email enviado exitosamente a: " + emailDTO.recipient());
+
+        } catch (Exception e) {
+            System.err.println("❌ Error enviando email a " + emailDTO.recipient() + ": " + e.getMessage());
+            throw new Exception("Error enviando email: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void enviarCodigoRecuperacion(String email, String codigo) {
+        // ✅ CORRECTO: Asunto corto y específico
+        String asunto = "🔐 Código de Recuperación - Plataforma de Reservas";
+
+        // ✅ CORRECTO: Contenido en el body
+        String contenido = construirContenidoCodigoRecuperacion(codigo);
+
+        EmailDTO emailDTO = new EmailDTO(email, asunto, contenido);
+
+        try {
+            sendMail(emailDTO);
+            System.out.println("📧 Código de recuperación enviado a: " + email);
+        } catch (Exception e) {
+            System.err.println("❌ Error enviando código a " + email + ": " + e.getMessage());
+            throw new RuntimeException("No se pudo enviar el código de recuperación", e);
+        }
+    }
+
+    @Override
+    public void enviarConfirmacionReserva(application.model.Reserva reserva) {
         String asunto = "✅ Confirmación de Reserva - " + reserva.getAlojamiento().getNombre();
         String contenido = construirContenidoConfirmacionReserva(reserva);
 
-        enviarEmail(
+        EmailDTO emailDTO = new EmailDTO(
                 reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getNombre(),
                 asunto,
                 contenido
         );
+
+        try {
+            sendMail(emailDTO);
+        } catch (Exception e) {
+            System.err.println("❌ Error enviando confirmación: " + e.getMessage());
+        }
+    }
+
+    private String construirContenidoConfirmacionReserva(Reserva reserva) {
+        return "";
     }
 
     @Override
-    public void enviarNotificacionNuevaReservaAnfitrion(Reserva reserva) {
-        Usuario anfitrion = reserva.getAlojamiento().getAnfitrion();
+    public void enviarNotificacionNuevaReservaAnfitrion(application.model.Reserva reserva) {
         String asunto = "📅 Nueva Reserva Recibida - " + reserva.getAlojamiento().getNombre();
         String contenido = construirContenidoNuevaReservaAnfitrion(reserva);
 
-        enviarEmail(
-                anfitrion.getEmail(),
-                anfitrion.getNombre(),
+        EmailDTO emailDTO = new EmailDTO(
+                reserva.getAlojamiento().getAnfitrion().getEmail(),
                 asunto,
                 contenido
         );
-    }
 
-    @Override
-    public void enviarNotificacionCancelacionUsuario(Reserva reserva) {
-        String asunto = "❌ Reserva Cancelada - " + reserva.getAlojamiento().getNombre();
-        String contenido = construirContenidoCancelacionUsuario(reserva);
-
-        enviarEmail(
-                reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getNombre(),
-                asunto,
-                contenido
-        );
-    }
-
-    public void sendMail(String destinatarioEmail, String asunto, String contenido) {
-        EmailDTO emailDTO = new EmailDTO(destinatarioEmail, asunto, contenido);
-        enviarEmail(emailDTO.recipient(), emailDTO.subject(), emailDTO.body());
-    }
-
-
-    @Override
-    public void enviarNotificacionCancelacionAnfitrion(Reserva reserva) {
-        Usuario anfitrion = reserva.getAlojamiento().getAnfitrion();
-        String asunto = "❌ Reserva Cancelada - " + reserva.getAlojamiento().getNombre();
-        String contenido = construirContenidoCancelacionAnfitrion(reserva);
-
-        enviarEmail(
-                anfitrion.getEmail(),
-                anfitrion.getNombre(),
-                asunto,
-                contenido
-        );
-    }
-
-    @Override
-    public void enviarNotificacionAprobacionReserva(Reserva reserva) {
-        String asunto = "✅ Reserva Aprobada - " + reserva.getAlojamiento().getNombre();
-        String contenido = construirContenidoAprobacionReserva(reserva);
-
-        enviarEmail(
-                reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getNombre(),
-                asunto,
-                contenido
-        );
-    }
-
-    @Override
-    public void enviarNotificacionRechazoReserva(Reserva reserva) {
-        String asunto = "❌ Reserva Rechazada - " + reserva.getAlojamiento().getNombre();
-        String contenido = construirContenidoRechazoReserva(reserva);
-
-        enviarEmail(
-                reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getNombre(),
-                asunto,
-                contenido
-        );
-    }
-
-    @Override
-    public void enviarRecordatorioCheckIn(Reserva reserva) {
-        String asunto = "🔔 Recordatorio Check-In - " + reserva.getAlojamiento().getNombre();
-        String contenido = construirContenidoRecordatorioCheckIn(reserva);
-
-        enviarEmail(
-                reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getNombre(),
-                asunto,
-                contenido
-        );
-    }
-
-    @Override
-    public void enviarConfirmacionReservaUsuario(Reserva reserva) {
-        enviarConfirmacionReserva(reserva); // Reutilizar
-    }
-
-    @Override
-    public void enviarSolicitudComentario(Reserva reserva) {
-        String asunto = "💬 Cuéntanos tu experiencia - " + reserva.getAlojamiento().getNombre();
-        String contenido = construirContenidoSolicitudComentario(reserva);
-
-        enviarEmail(
-                reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getNombre(),
-                asunto,
-                contenido
-        );
-    }
-
-    // ✅ EMAIL GENÉRICO CON SIMPLE JAVA MAIL
-    @Override
-    public void enviarEmail(String destinatario, String asunto, String contenido) {
-        enviarEmail(destinatario, null, asunto, contenido);
-    }
-
-    // ✅ MÉTODO PRINCIPAL DE ENVÍO
-    private void enviarEmail(String destinatarioEmail, String destinatarioNombre, String asunto, String contenido) {
         try {
-            var email = EmailBuilder.startingBlank()
-                    .from(REMITENTE_NOMBRE, REMITENTE_EMAIL)
-                    .to(destinatarioNombre != null ? destinatarioNombre : "Usuario", destinatarioEmail)
-                    .withSubject(asunto)
-                    .withPlainText(contenido)
-                    .buildEmail();
-
-            mailer.sendMail(email);
-            System.out.println("📧 Email enviado a: " + destinatarioEmail);
-
+            sendMail(emailDTO);
         } catch (Exception e) {
-            System.err.println("❌ Error enviando email a " + destinatarioEmail + ": " + e.getMessage());
-            // No relanzar la excepción para no romper el flujo principal
+            System.err.println("❌ Error enviando notificación anfitrión: " + e.getMessage());
         }
     }
+
+    private String construirContenidoNuevaReservaAnfitrion(Reserva reserva) {
+        return "";
+    }
+
+    @Override
+    public void enviarEmail(String destinatario, String asunto, String contenido) {
+        EmailDTO emailDTO = new EmailDTO(destinatario, asunto, contenido);
+        try {
+            sendMail(emailDTO);
+        } catch (Exception e) {
+            System.err.println("❌ Error enviando email genérico: " + e.getMessage());
+        }
+    }
+
+    // ... ADAPTA TODOS TUS OTROS MÉTODOS de la misma forma
+
+    public String construirContenidoCodigoRecuperacion(String codigo) {
+        return """
+            Hola,
+            
+            Has solicitado restablecer tu contraseña en nuestra plataforma.
+            
+            🔒 Tu código de verificación es: **%s**
+            
+            ⏰ Este código expirará en 10 minutos.
+            
+            Si no solicitaste este cambio, por favor ignora este mensaje.
+            
+            Saludos,
+            Equipo de Plataforma de Reservas
+            """.formatted(codigo);
+    }
+
+    // ... MANTÉN TODOS TUS MÉTODOS de construcción de contenido existentes
+    // construirContenidoConfirmacionReserva, construirContenidoNuevaReservaAnfitrion, etc.
 
     @Override
     public boolean validarEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
             return false;
         }
-        // Simple Java Mail tiene validación integrada, pero hacemos una básica
         String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
         return email.matches(regex);
     }
 
     @Override
-    public void enviarReservaAprobada(Reserva reserva) {
-        enviarNotificacionAprobacionReserva(reserva);
+    public void enviarReservaAprobada(Reserva reservaActualizada) {
+
     }
 
     @Override
-    public void enviarReservaRechazada(Reserva reserva) {
-        enviarNotificacionRechazoReserva(reserva);
+    public void enviarReservaRechazada(Reserva reservaActualizada) {
+
     }
 
-    // 🔧 MÉTODOS PARA CONSTRUIR CONTENIDO (LOS MISMOS QUE ANTES)
+    @Override
+    public void sendMail(String destinatarioEmail, String asunto, String contenido) {
 
-    private String construirContenidoConfirmacionReserva(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        ¡Tu reserva ha sido confirmada! 🎉
-                        
-                        📋 DETALLES DE TU RESERVA:
-                        • Alojamiento: %s
-                        • Dirección: %s
-                        • Check-in: %s
-                        • Check-out: %s
-                        • Huéspedes: %d
-                        • Estado: CONFIRMADA
-                        
-                        💡 Información importante:
-                        - Presenta este correo al check-in
-                        - El check-in es a partir de las 15:00
-                        - El check-out es antes de las 11:00
-                        
-                        📞 Contacto del anfitrión:
-                        • Nombre: %s
-                        • Email: %s
-                        • Teléfono: %s
-                        
-                        ¡Esperamos que tengas una estancia maravillosa!
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getUsuario().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getAlojamiento().getDireccion(),
-                reserva.getCheckIn(),
-                reserva.getCheckOut(),
-                reserva.getNumeroHuespedes(),
-                reserva.getAlojamiento().getAnfitrion().getNombre(),
-                reserva.getAlojamiento().getAnfitrion().getEmail(),
-                reserva.getAlojamiento().getAnfitrion().getTelefono() != null ?
-                        reserva.getAlojamiento().getAnfitrion().getTelefono() : "No disponible"
-        );
     }
 
-    private String construirContenidoNuevaReservaAnfitrion(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        ¡Tienes una nueva reserva! 🎊
-                        
-                        📋 DETALLES DE LA RESERVA:
-                        • Alojamiento: %s
-                        • Huésped: %s
-                        • Email: %s
-                        • Teléfono: %s
-                        • Check-in: %s
-                        • Check-out: %s
-                        • Huéspedes: %d
-                        • Estado: PENDIENTE
-                        
-                        ⚡ Acción requerida:
-                        Por favor, confirma o rechaza esta reserva en tu panel de anfitrión.
-                        
-                        ¡Gracias por ser parte de nuestra comunidad!
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getAlojamiento().getAnfitrion().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getUsuario().getNombre(),
-                reserva.getUsuario().getEmail(),
-                reserva.getUsuario().getTelefono() != null ?
-                        reserva.getUsuario().getTelefono() : "No disponible",
-                reserva.getCheckIn(),
-                reserva.getCheckOut(),
-                reserva.getNumeroHuespedes()
-        );
+    // ... IMPLEMENTA LOS DEMÁS MÉTODOS adaptándolos a usar sendMail
+    @Override
+    public void enviarNotificacionCancelacionUsuario(application.model.Reserva reserva) {
+        String asunto = "❌ Reserva Cancelada - " + reserva.getAlojamiento().getNombre();
+        String contenido = construirContenidoCancelacionUsuario(reserva);
+
+        EmailDTO emailDTO = new EmailDTO(reserva.getUsuario().getEmail(), asunto, contenido);
+        try { sendMail(emailDTO); } catch (Exception e) { /* manejar error */ }
     }
 
     private String construirContenidoCancelacionUsuario(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        Tu reserva ha sido cancelada.
-                        
-                        📋 RESERVA CANCELADA:
-                        • Alojamiento: %s
-                        • Fechas: %s a %s
-                        • Huéspedes: %d
-                        
-                        💰 Reembolso:
-                        - Si aplica reembolso, se procesará en 5-7 días hábiles
-                        - El monto se acreditará en tu método de pago original
-                        
-                        😔 Lamentamos cualquier inconveniente
-                        Esperamos verte de nuevo pronto.
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getUsuario().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getCheckIn(),
-                reserva.getCheckOut(),
-                reserva.getNumeroHuespedes()
-        );
+        return "";
+    }
+
+    @Override
+    public void enviarNotificacionCancelacionAnfitrion(application.model.Reserva reserva) {
+        String asunto = "❌ Reserva Cancelada - " + reserva.getAlojamiento().getNombre();
+        String contenido = construirContenidoCancelacionAnfitrion(reserva);
+
+        EmailDTO emailDTO = new EmailDTO(reserva.getAlojamiento().getAnfitrion().getEmail(), asunto, contenido);
+        try { sendMail(emailDTO); } catch (Exception e) { /* manejar error */ }
     }
 
     private String construirContenidoCancelacionAnfitrion(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        Una reserva ha sido cancelada.
-                        
-                        📋 RESERVA CANCELADA:
-                        • Alojamiento: %s
-                        • Huésped: %s
-                        • Fechas: %s a %s
-                        • Huéspedes: %d
-                        
-                        📊 Impacto en tus estadísticas:
-                        - Esta cancelación afectará tu tasa de finalización
-                        - Las cancelaciones frecuentes pueden afectar tu visibilidad
-                        
-                        💡 Recomendación:
-                        - Considera ajustar tu política de cancelación
-                        - Mantén tu calendario actualizado
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getAlojamiento().getAnfitrion().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getUsuario().getNombre(),
-                reserva.getCheckIn(),
-                reserva.getCheckOut(),
-                reserva.getNumeroHuespedes()
-        );
+        return "";
     }
 
-    private String construirContenidoAprobacionReserva(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        ¡Buena noticia! Tu reserva ha sido aprobada por el anfitrión. ✅
-                        
-                        📋 DETALLES APROBADOS:
-                        • Alojamiento: %s
-                        • Dirección: %s
-                        • Check-in: %s
-                        • Check-out: %s
-                        • Huéspedes: %d
-                        
-                        🗓️ Próximos pasos:
-                        1. Prepárate para tu viaje
-                        2. Contacta al anfitrión si necesitas información adicional
-                        3. Presenta identificación al check-in
-                        
-                        📞 Contacto del anfitrión:
-                        • %s
-                        • %s
-                        
-                        ¡Que tengas un excelente viaje!
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getUsuario().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getAlojamiento().getDireccion(),
-                reserva.getCheckIn(),
-                reserva.getCheckOut(),
-                reserva.getNumeroHuespedes(),
-                reserva.getAlojamiento().getAnfitrion().getNombre(),
-                reserva.getAlojamiento().getAnfitrion().getEmail()
-        );
+    @Override
+    public void enviarNotificacionAprobacionReserva(Reserva reserva) {
+
     }
 
-    private String construirContenidoRechazoReserva(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        Lamentamos informarte que tu reserva ha sido rechazada.
-                        
-                        📋 RESERVA RECHAZADA:
-                        • Alojamiento: %s
-                        • Fechas: %s a %s
-                        
-                        🔍 Posibles razones:
-                        - El alojamiento no está disponible en esas fechas
-                        - El anfitrión no puede aceptar la reserva
-                        - Capacidad no disponible
-                        
-                        💡 Alternativas:
-                        - Busca otros alojamientos similares
-                        - Ajusta tus fechas de viaje
-                        - Contacta al servicio al cliente si necesitas ayuda
-                        
-                        Lamentamos los inconvenientes y esperamos poder ayudarte a encontrar el alojamiento perfecto.
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getUsuario().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getCheckIn(),
-                reserva.getCheckOut()
-        );
+    @Override
+    public void enviarNotificacionRechazoReserva(Reserva reserva) {
+
     }
 
-    private String construirContenidoRecordatorioCheckIn(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        ¡Tu check-in está cerca! 🎉
-                        
-                        📅 Recordatorio de reserva:
-                        • Alojamiento: %s
-                        • Check-in: %s (mañana)
-                        • Check-out: %s
-                        • Dirección: %s
-                        
-                        🎒 Prepárate para tu viaje:
-                        - Revisa las instrucciones de check-in
-                        - Ten a mano tu identificación
-                        - Contacta al anfitrión si llegas fuera del horario establecido
-                        
-                        📞 Contacto del anfitrión:
-                        • %s - %s
-                        
-                        ¡Que tengas un viaje seguro y una estancia maravillosa!
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        """,
-                reserva.getUsuario().getNombre(),
-                reserva.getAlojamiento().getNombre(),
-                reserva.getCheckIn(),
-                reserva.getCheckOut(),
-                reserva.getAlojamiento().getDireccion(),
-                reserva.getAlojamiento().getAnfitrion().getNombre(),
-                reserva.getAlojamiento().getAnfitrion().getEmail()
-        );
+    @Override
+    public void enviarRecordatorioCheckIn(Reserva reserva) {
+
     }
 
-    private String construirContenidoSolicitudComentario(Reserva reserva) {
-        return String.format("""
-                        Hola %s,
-                        
-                        Esperamos que hayas tenido una estancia agradable en %s.
-                        
-                        Tu opinión es muy importante para nosotros y para la comunidad de viajeros.
-                        
-                        🌟 Por favor, comparte tu experiencia:
-                        - Califica el alojamiento
-                        - Escribe un comentario sobre tu estancia
-                        - Ayuda a otros viajeros a tomar la mejor decisión
-                        
-                        ⏱️ Solo te tomará 2 minutos y harás una gran diferencia.
-                        
-                        ¡Gracias por ser parte de nuestra comunidad!
-                        
-                        Saludos cordiales,
-                        El equipo de la plataforma
-                        
-                        PD: Las reseñas honestas ayudan a mantener la calidad de nuestra plataforma.
-                        """,
-                reserva.getUsuario().getNombre(),
-                reserva.getAlojamiento().getNombre()
-        );
+    @Override
+    public void enviarConfirmacionReservaUsuario(Reserva reserva) {
+
     }
+
+    @Override
+    public void enviarSolicitudComentario(Reserva reserva) {
+
+    }
+
+    // ... continúa con los demás métodos
 }

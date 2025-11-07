@@ -15,7 +15,7 @@ public record CrearUsuarioDTO(
         @NotBlank @Length(max = 150) @Email String email,
         @Length(max = 50) String telefono,
         @NotBlank @Length(min = 7, max = 100) String contrasenia,
-        @Length(max = 300) String fotoPerfil,
+        String foto_perfil,
         @Past LocalDate fechaNacimiento,
         Role rol
 

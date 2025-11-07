@@ -38,8 +38,8 @@ public class Usuario {
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
-    @Column(name = "foto_perfil", length = 300)
-    private String fotoPerfil;
+    @Column(name = "foto_perfil", length = 1000)
+    private String foto_perfil;
 
     @Column(nullable = false)
     private Boolean activo = Boolean.TRUE;

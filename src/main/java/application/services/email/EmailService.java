@@ -1,8 +1,13 @@
 package application.services.email;
 
+import application.dto.email.EmailDTO;
 import application.model.Reserva;
+import org.springframework.scheduling.annotation.Async;
 
 public interface EmailService {
+
+    @Async
+    void sendMail(EmailDTO emailDTO) throws Exception;
 
     void enviarConfirmacionReserva(Reserva reserva);
 
@@ -23,6 +28,8 @@ public interface EmailService {
     void enviarSolicitudComentario(Reserva reserva);
 
     void enviarEmail(String destinatario, String asunto, String contenido);
+
+    void enviarCodigoRecuperacion(String email, String codigo);
 
     boolean validarEmail(String email);
 
