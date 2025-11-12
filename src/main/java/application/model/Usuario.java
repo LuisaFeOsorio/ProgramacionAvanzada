@@ -33,6 +33,7 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 50)
+    
     private Role rol;
 
     @Column(name = "fecha_nacimiento")
@@ -81,4 +82,70 @@ public class Usuario {
     public Usuario() {
 
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getContrasenia() {
+        return contrasenia;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public Role getRol() {
+        return rol;
+    }
+
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public String getFoto_perfil() {
+        return foto_perfil;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public String getDescripcionPersonal() {
+        return descripcionPersonal;
+    }
+
+    public String getDocumentoIdentidad() {
+        return documentoIdentidad;
+    }
+
+    public String getArchivoDocumentos() {
+        return archivoDocumentos;
+    }
+
+    public Boolean getDocumentosVerificados() {
+        return documentosVerificados;
+    }
+
+    public List<Alojamiento> getAlojamientos() {
+        return alojamientos;
+    }
+
+    public List<Reserva> getReservas() {
+        return reservas;
+    }
+
+    public List<Comentario> getComentarios() {
+        return comentarios;
+    }
+
+
 }

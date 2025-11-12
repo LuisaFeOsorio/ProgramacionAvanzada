@@ -3,36 +3,51 @@ package application.mappers;
 import application.dto.alojamiento.AlojamientoDTO;
 import application.dto.alojamiento.EditarAlojamientoDTO;
 import application.model.Alojamiento;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface AlojamientoMapper {
 
-    // ✅ MAPEO A DTO PRINCIPAL
-    @Mapping(target = "capacidad", source = "capacidadMaxima")
+    @Mapping(target = "capacidadMaxima", source = "capacidadMaxima")
+    @Mapping(target = "numeroHabitaciones", source = "numeroHabitaciones")
+    @Mapping(target = "numeroBanos", source = "numeroBanos")
+    @Mapping(target = "imagenes", source = "imagenes")
+    @Mapping(target = "imagenPrincipal", expression = "java(obtenerImagenPrincipal(alojamiento))")
+    // Nuevos mapeos
+    @Mapping(target = "anfitrionId", source = "anfitrion.id")
+    @Mapping(target = "fechaCreacion", source = "fechaCreacion")
+    @Mapping(target = "totalCalificaciones", expression = "java(calcularTotalCalificaciones(alojamiento))")
     AlojamientoDTO toDTO(Alojamiento alojamiento);
 
-    // ✅ MAPEO PARA LISTA (ahora funciona sin ambigüedad)
     List<AlojamientoDTO> toDTOList(List<Alojamiento> alojamientos);
 
-    // ✅ ACTUALIZACIÓN PARCIAL
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "anfitrion", ignore = true)
-    @Mapping(target = "tipo", ignore = true)
-    @Mapping(target = "pais", ignore = true)
-    @Mapping(target = "direccion", ignore = true)
-    @Mapping(target = "activo", ignore = true)
-    @Mapping(target = "calificacionPromedio", ignore = true)
-    @Mapping(target = "totalCalificaciones", ignore = true)
-    @Mapping(target = "fechaCreacion", ignore = true)
     @Mapping(target = "reservas", ignore = true)
     @Mapping(target = "comentarios", ignore = true)
-    @Mapping(target = "imagenes", ignore = true)
-    @Mapping(target = "servicios", ignore = true)
-    @Mapping(target = "capacidadMaxima", ignore = true)
+    @Mapping(target = "calificacionPromedio", ignore = true)
+    @Mapping(target = "activo", ignore = true)
+    @Mapping(target = "fechaCreacion", ignore = true)
+    @Mapping(target = "totalCalificaciones", ignore = true)
     void updateFromEditarDTO(EditarAlojamientoDTO dto, @MappingTarget Alojamiento alojamiento);
 
-    // ❌ ELIMINADO: toDTOSimple - usa toDTO para todo
+    default String obtenerImagenPrincipal(Alojamiento alojamiento) {
+        if (alojamiento.getImagenes() == null || alojamiento.getImagenes().isEmpty()) {
+            return null;
+        }
+        return alojamiento.getImagenes().get(0);
+    }
+
+    default Integer calcularTotalCalificaciones(Alojamiento alojamiento) {
+        if (alojamiento.getComentarios() == null) {
+            return 0;
+        }
+        return (int) alojamiento.getComentarios().stream()
+                .filter(comentario -> comentario.getCalificacion() != null)
+                .count();
+    }
 }

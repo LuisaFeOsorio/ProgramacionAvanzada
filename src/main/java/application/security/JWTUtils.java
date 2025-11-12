@@ -1,13 +1,12 @@
 package application.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -16,54 +15,63 @@ import java.util.Map;
 @Component
 public class JWTUtils {
 
-    private final String SECRET_KEY = "mi-clave-secreta-muy-larga-para-jwt-256-bits-1234567890";
+    @Value("${jwt.secret:mySuperSecretKeyForJWTGenerationInSpringBootApplication2024}")
+    private String secretKey;
 
-    public String generateToken(String id, Map<String, String> claims) {
-        try {
-            System.out.println("🔐 GENERANDO TOKEN JWT...");
+    @Value("${jwt.expiration.hours:24}")
+    private long expirationHours;
 
-            Instant now = Instant.now();
-            SecretKey key = getKey();
+    public String generateToken(String email, Map<String, String> claims) {
+        Instant now = Instant.now();
 
-            String token = Jwts.builder()
-                    .setClaims(claims)
-                    .setSubject(id)
-                    .setIssuedAt(Date.from(now))
-                    .setExpiration(Date.from(now.plus(1, ChronoUnit.HOURS)))
-                    .signWith(key, SignatureAlgorithm.HS256)
-                    .compact();
+        JwtBuilder builder = Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(expirationHours, ChronoUnit.HOURS)))
+                .signWith(getKey(), SignatureAlgorithm.HS256);
 
-            System.out.println("✅ TOKEN GENERADO - Longitud: " + token.length());
-            return token;
-
-        } catch (Exception e) {
-            System.out.println("❌ ERROR GENERANDO TOKEN: " + e.getMessage());
-            throw new RuntimeException("Error generando token JWT", e);
+        // Agregar claims
+        if (claims != null) {
+            claims.forEach(builder::claim);
         }
+
+        return builder.compact();
     }
 
-    public Claims extractClaims(String token) {
+    public Jws<Claims> parseJwt(String jwtString) throws ExpiredJwtException,
+            UnsupportedJwtException, MalformedJwtException,
+            SignatureException, IllegalArgumentException {
+
         return Jwts.parserBuilder()
                 .setSigningKey(getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseClaimsJws(jwtString);
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getKey())
-                    .build()
-                    .parseClaimsJws(token);
+            parseJwt(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
+    public String getUsernameFromToken(String token) {
+        try {
+            Jws<Claims> claimsJws = parseJwt(token);
+            return claimsJws.getBody().getSubject();
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private SecretKey getKey() {
-        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+        // Validar que la clave tenga el tamaño mínimo requerido
+        if (secretKey.length() < 32) {
+            throw new IllegalStateException("JWT secret key must be at least 32 characters long");
+        }
+        byte[] secretKeyBytes = secretKey.getBytes();
+        return Keys.hmacShaKeyFor(secretKeyBytes);
     }
 }

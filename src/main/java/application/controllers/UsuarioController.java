@@ -1,12 +1,11 @@
 package application.controllers;
 
-import application.dto.usuario.*;
 import application.dto.ResponseDTO;
 import application.dto.contrasenia.CambioContraseniaDTO;
-import application.exceptions.ValueConflictException;
+import application.dto.usuario.*;
 import application.exceptions.usuario.EmailEnUsoException;
 import application.exceptions.usuario.UsuarioNoEncontradoException;
-import application.services.imagen.ImagenService;
+import application.model.enums.Role;
 import application.services.impl.ImageServiceImpl;
 import application.services.usuario.UsuarioService;
 import jakarta.validation.Valid;
@@ -21,7 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import application.model.enums.Role;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -43,6 +42,7 @@ public class UsuarioController {
             @RequestPart(value = "telefono", required = false) String telefono,
             @RequestPart("fechaNacimiento") String fechaNacimientoStr,
             @RequestPart("contrasenia") String contrasenia,
+            @RequestPart(value = "rol", required = false) String rol, // ✅ Agregar este parámetro
             @RequestPart(value = "fotoPerfil", required = false) MultipartFile fotoPerfil) {
 
         try {
@@ -55,6 +55,14 @@ public class UsuarioController {
                 fotoPerfilUrl = imagenService.upload(fotoPerfil).toString();
             }
 
+            // ✅ Determinar el rol basado en lo que viene del frontend
+            Role role;
+            if (rol != null && rol.equalsIgnoreCase("ANFITRION")) {
+                role = Role.ANFITRION;
+            } else {
+                role = Role.USUARIO;
+            }
+
             CrearUsuarioDTO usuarioDTO = new CrearUsuarioDTO(
                     nombre + " " + apellido,
                     email,
@@ -62,7 +70,7 @@ public class UsuarioController {
                     contrasenia,
                     fotoPerfilUrl != null ? fotoPerfilUrl : "",
                     fechaNacimiento,
-                    Role.USUARIO
+                    role // ✅ Usar el rol determinado
             );
 
             UsuarioDTO usuarioCreado = usuarioService.crear(usuarioDTO);

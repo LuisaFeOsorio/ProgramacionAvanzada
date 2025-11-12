@@ -6,10 +6,18 @@ import application.dto.alojamiento.EditarAlojamientoDTO;
 import application.dto.alojamiento.FiltroBusquedaDTO;
 import application.dto.paginacion.PaginacionDTO;
 import application.exceptions.alojamiento.*;
+import application.model.Alojamiento;
+import application.repositories.AlojamientoRepository;
 
 import java.util.List;
 
 public interface AlojamientoService {
+
+    AlojamientoDTO crear(CrearAlojamientoDTO dto);
+
+    List<AlojamientoDTO> obtenerTodos() ;
+
+    AlojamientoDTO mapToDTO(Alojamiento a);
 
     AlojamientoDTO crearAlojamiento(String hostId, CrearAlojamientoDTO dto) throws CrearAlojamientoException;
 
@@ -26,4 +34,8 @@ public interface AlojamientoService {
     boolean puedeEliminarse(String alojamientoId);
 
     AlojamientoDTO marcarImagenPrincipal(String alojamientoId, String imageId);
+    List<AlojamientoDTO> obtenerTodosAlojamientos();
+
+
+    AlojamientoDTO obtenerAlojamientoPorId(Long id);
 }

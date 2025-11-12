@@ -4,7 +4,7 @@ public interface ContraseniaService {
 
     void solicitarCodigoRecuperacion(String email);
 
-    void restablecerContrasena(String email, String codigo, String nuevaPassword);
+    void restablecerContrasena(String email, String codigo, String nuevaContrasenia);
 
     boolean verificarCodigo(String email, String codigo);
 }

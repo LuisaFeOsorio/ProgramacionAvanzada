@@ -63,14 +63,16 @@ public class Alojamiento {
     @Column(name = "calificacion_promedio")
     private Double calificacionPromedio = 0.0;
 
-    @Column(name = "total_calificaciones")
-    private Integer totalCalificaciones = 0;
-
     @Column(nullable = false)
     private Boolean activo = true;
 
-    @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    // --- NUEVOS ATRIBUTOS ---
+
+    @Column(name = "total_calificaciones")
+    private Integer totalCalificaciones = 0;
+
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
+    private LocalDateTime fechaCreacion;
 
     // --- RELACIONES ---
 
@@ -84,4 +86,43 @@ public class Alojamiento {
     @OneToMany(mappedBy = "alojamiento", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
 
+    // --- MÉTODOS DEL CICLO DE VIDA ---
+
+    @PrePersist
+    protected void onCreate() {
+        if (fechaCreacion == null) {
+            fechaCreacion = LocalDateTime.now();
+        }
+        if (totalCalificaciones == null) {
+            totalCalificaciones = 0;
+        }
+        if (calificacionPromedio == null) {
+            calificacionPromedio = 0.0;
+        }
+        if (activo == null) {
+            activo = true;
+        }
+    }
+
+    // --- MÉTODOS DE NEGOCIO ---
+
+    public void actualizarCalificaciones() {
+        if (this.comentarios == null || this.comentarios.isEmpty()) {
+            this.calificacionPromedio = 0.0;
+            this.totalCalificaciones = 0;
+            return;
+        }
+
+        double suma = this.comentarios.stream()
+                .filter(comentario -> comentario.getCalificacion() != null)
+                .mapToDouble(comentario -> comentario.getCalificacion())
+                .sum();
+
+        long count = this.comentarios.stream()
+                .filter(comentario -> comentario.getCalificacion() != null)
+                .count();
+
+        this.calificacionPromedio = count > 0 ? Math.round((suma / count) * 10.0) / 10.0 : 0.0;
+        this.totalCalificaciones = (int) count;
+    }
 }

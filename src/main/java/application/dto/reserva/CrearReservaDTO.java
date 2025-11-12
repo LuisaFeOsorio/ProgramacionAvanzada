@@ -1,29 +1,36 @@
 package application.dto.reserva;
 
-import application.model.enums.Servicio;
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 import java.util.List;
 
+// CrearReservaDTO.java - ACTUALIZADO
 public record CrearReservaDTO(
-        @NotNull @Future(message = "La fecha de check-in debe ser futura")
+        @NotNull(message = "La fecha de check-in es obligatoria")
+        @Future(message = "La fecha de check-in debe ser futura")
         LocalDate checkIn,
 
-        @NotNull @Future(message = "La fecha de check-out debe ser futura")
+        @NotNull(message = "La fecha de check-out es obligatoria")
+        @Future(message = "La fecha de check-out debe ser futura")
         LocalDate checkOut,
 
-        @NotNull @Positive(message = "El número de huéspedes debe ser mayor a 0")
-                Integer numeroHuespedes,
+        @Min(value = 1, message = "El número de huéspedes debe ser al menos 1")
+        Integer numeroHuespedes,
 
-        @NotBlank @Length(max = 100)
-                String alojamientoId,
+        @NotNull(message = "El ID del alojamiento es obligatorio")
+        Long alojamientoId,
 
-        @NotNull
-        List<Servicio> serviciosExtras
+        @NotNull(message = "El ID del usuario es obligatorio") // ← NUEVO
+        Long usuarioId, // ← NUEVO CAMPO
+
+        List<String> serviciosExtras
 ) {
+    public CrearReservaDTO {
+        if (serviciosExtras == null) {
+            serviciosExtras = List.of();
+        }
+    }
 }

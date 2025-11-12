@@ -1,10 +1,6 @@
--- ========================================
--- 🔹 DATASET DE PRUEBA - PROYECTO ALOJAMIENTOS
--- ========================================
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Limpieza previa
 TRUNCATE TABLE alojamiento_imagenes;
 TRUNCATE TABLE alojamiento_servicios;
 TRUNCATE TABLE reserva_servicios;
@@ -16,18 +12,12 @@ TRUNCATE TABLE usuarios;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ======================
--- 👤 USUARIOS (3 ejemplos)
--- ======================
 INSERT INTO usuarios (id, nombre, email, contrasenia, telefono, rol, fecha_nacimiento, foto_perfil, activo, descripcion_personal, documento_identidad, archivo_documentos, documentos_verificados)
 VALUES
     (1, 'Carlos Pérez', 'carlos@example.com', '1234', '3001112233', 'USUARIO', '1985-06-15', NULL, TRUE, 'Amante de los viajes y anfitrión desde 2020', 'CC123456', 'docs/carlos.pdf', TRUE),
     (2, 'Luisa Gómez', 'luisa@example.com', 'abcd', '3105557788', 'USUARIO', '1992-04-22', NULL, TRUE, NULL, NULL, NULL, FALSE),
     (3, 'Mariana Torres', 'mariana@example.com', 'xyz789', '3204449966', 'USUARIO', '1990-09-10', NULL, TRUE, 'Ofrece alojamientos rurales en el Quindío', 'CC987654', 'docs/mariana.pdf', TRUE);
 
--- ======================
--- 🏡 ALOJAMIENTOS (3 ejemplos)
--- ======================
 INSERT INTO alojamientos (id, nombre, descripcion, tipo, ciudad, pais, direccion, precio_por_noche, capacidad_maxima, numero_habitaciones, numero_banos, calificacion_promedio, total_calificaciones, activo, fecha_creacion, anfitrion_id)
 VALUES
     (1, 'Casa Campestre El Roble', 'Hermosa casa con vista a las montañas del Quindío.', 'CASA', 'Salento', 'Colombia', 'Km 2 vía Cocora', 250000, 6, 3, 2, 4.5, 10, TRUE, NOW(), 1),
@@ -36,9 +26,9 @@ VALUES
 
 -- Servicios e imágenes
 INSERT INTO alojamiento_servicios (alojamiento_id, servicio) VALUES
-                                                                 (1, 'WiFi'), (1, 'Parqueadero'), (1, 'Piscina'),
-                                                                 (2, 'WiFi'), (2, 'Aire acondicionado'), (2, 'TV por cable'),
-                                                                 (3, 'Chimenea'), (3, 'Senderismo'), (3, 'Mascotas permitidas');
+                                                                 (1, 'WIFI'), (1, 'PARQUEADERO'), (1, 'LAVADORA'),
+                                                                 (2, 'WIFI'), (2, 'PARQUEADERO'), (2, 'LAVADORA'),
+                                                                 (3, 'JACUZZI'), (3, 'LAVADORA'), (3, 'GIMNASIO');
 
 INSERT INTO alojamiento_imagenes (alojamiento_id, url_imagen) VALUES
                                                                   (1, 'img/casa_roble_1.jpg'), (1, 'img/casa_roble_2.jpg'),
@@ -48,11 +38,11 @@ INSERT INTO alojamiento_imagenes (alojamiento_id, url_imagen) VALUES
 -- ======================
 -- 🗓️ RESERVAS (3 ejemplos)
 -- ======================
-INSERT INTO reservas (id, check_in, check_out, numero_huespedes, estado, usuario_id, alojamiento_id)
+INSERT INTO reservas (id, check_in, check_out, numero_huespedes,precio_total, estado, usuario_id, alojamiento_id,fecha_creacion)
 VALUES
-    (1, '2025-10-10', '2025-10-15', 2, 'CONFIRMADA', 2, 1),
-    (2, '2025-11-01', '2025-11-05', 4, 'PENDIENTE', 2, 2),
-    (3, '2025-12-20', '2025-12-27', 3, 'COMPLETADA', 2, 3);
+    (1, '2025-10-10', '2025-10-15', 2, 200.000,'CONFIRMADA', 2, 1,'2025-10-10'),
+    (2, '2025-11-01', '2025-11-05', 4, 200.000,'PENDIENTE', 2, 2,'2025-11-01'),
+    (3, '2025-12-20', '2025-12-27', 3, 300.000,'COMPLETADA', 2, 3,'2025-12-20');
 
 INSERT INTO reserva_servicios (reserva_id, servicio) VALUES
                                                          (1, 'WIFI'), (1, 'DESAYUNO'),

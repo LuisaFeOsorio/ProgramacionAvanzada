@@ -4,8 +4,6 @@ public enum Servicio {
         WIFI,
         PISCINA,
         PARQUEADERO,
-        AIRE_ACONDICIONADO,
-        TV,
         COCINA,
         LAVADORA,
         SECADORA,

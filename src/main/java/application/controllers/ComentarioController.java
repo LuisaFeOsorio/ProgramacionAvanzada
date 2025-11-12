@@ -1,8 +1,8 @@
 package application.controllers;
 
+import application.dto.ResponseDTO;
 import application.dto.comentario.ComentarioDTO;
 import application.dto.comentario.CrearComentarioDTO;
-import application.dto.ResponseDTO;
 import application.dto.comentario.RespuestaComentarioDTO;
 import application.dto.paginacion.PaginacionDTO;
 import application.model.Usuario;

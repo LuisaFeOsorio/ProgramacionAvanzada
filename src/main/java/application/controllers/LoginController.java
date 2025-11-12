@@ -1,16 +1,15 @@
 package application.controllers;
 
-import application.dto.auth.LoginDTO;
 import application.dto.ResponseDTO;
+import application.dto.auth.LoginDTO;
+import application.model.Usuario;
+import application.repositories.UsuarioRepository;
 import application.security.JWTUtils;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -23,39 +22,39 @@ public class LoginController {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtils jwtUtil;
+    private final UsuarioRepository usuarioRepository;
+
+
+    public Usuario findByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + email));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<ResponseDTO<String>> login(@RequestBody LoginDTO loginDTO) {
         try {
-            System.out.println("🔐 === LOGIN ATTEMPT ===");
-            System.out.println("Email: " + loginDTO.email());
-            System.out.println("Contraseña: " + loginDTO.contrasenia());
-
-            // Autenticar usuario
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.email(), loginDTO.contrasenia())
             );
 
-            System.out.println("✅ === AUTHENTICATION SUCCESSFUL ===");
+            Usuario usuario = findByEmail(loginDTO.email());
 
-            // Generar claims y token
             Map<String, String> claims = new HashMap<>();
-            claims.put("email", loginDTO.email());
-            claims.put("role", "ANFITRION"); // Ajusta según el rol real
+            claims.put("id", String.valueOf(usuario.getId()));
+            claims.put("role", usuario.getRol().name());
+            claims.put("email", usuario.getEmail());
 
-            String token = jwtUtil.generateToken(loginDTO.email(), claims);
-            System.out.println("🎉 TOKEN CREADO Y ENVIADO");
+            String token = jwtUtil.generateToken(usuario.getEmail(), claims);
 
-            ResponseDTO<String> response = new ResponseDTO<>(false, "Login exitoso", token);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new ResponseDTO<>(false, "Login exitoso", token));
 
         } catch (Exception e) {
-            System.out.println("❌ === LOGIN FAILED ===");
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.badRequest()
                     .body(new ResponseDTO<>(true, "Credenciales inválidas", null));
         }
     }
+
+
 
     // Endpoint para desarrollo - crear usuario de prueba
     @PostMapping("/create-test-user")

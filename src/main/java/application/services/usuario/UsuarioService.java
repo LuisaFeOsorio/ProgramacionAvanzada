@@ -5,6 +5,7 @@ import application.dto.usuario.*;
 import application.exceptions.ValueConflictException;
 import application.exceptions.usuario.EmailEnUsoException;
 import application.exceptions.usuario.UsuarioNoEncontradoException;
+import application.model.Usuario;
 
 import java.util.List;
 
@@ -42,4 +43,6 @@ public interface UsuarioService {
     boolean esAnfitrion(String id) throws UsuarioNoEncontradoException;
 
     UsuarioDTO obtenerPorEmail(String email);
+
+    Usuario findByEmail(String email) throws UsuarioNoEncontradoException;
 }

@@ -1,23 +1,22 @@
 package application.services.impl;
 
+import application.dto.paginacion.PaginacionDTO;
 import application.dto.reserva.CrearReservaDTO;
 import application.dto.reserva.FiltroReservaDTO;
-import application.dto.paginacion.PaginacionDTO;
 import application.dto.reserva.ReservaDTO;
 import application.exceptions.reserva.ReservaNoCanceladaException;
-import application.exceptions.reserva.ReservaNoCreadaException;
 import application.exceptions.reserva.ReservasNoObtenidasException;
 import application.mappers.ReservaMapper;
+import application.model.Alojamiento;
 import application.model.Reserva;
 import application.model.Usuario;
-import application.model.Alojamiento;
 import application.model.enums.EstadoReserva;
 import application.repositories.AlojamientoRepository;
 import application.repositories.ReservaRepository;
 import application.repositories.UsuarioRepository;
-import application.services.reserva.ReservaService;
-import application.services.email.EmailService;
 import application.services.NotificacionesService;
+import application.services.email.EmailService;
+import application.services.reserva.ReservaService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,52 +47,63 @@ public class ReservaServiceImpl implements ReservaService {
     private final AlojamientoRepository alojamientoRepository;
     private final ReservaMapper reservaMapping;
     private final EmailService emailService;
+    private final ReservaMapper reservaMapper;
     private final NotificacionesService notificacionesService;
 
 
+    // ReservaService.java - ACTUALIZADO
     @Override
-    public ReservaDTO crearReserva(String usuarioId, CrearReservaDTO dto) throws ReservaNoCreadaException {
-        try {
-            // Validar usuario
-            Usuario usuario = usuarioRepository.findById(Long.valueOf(usuarioId))
-                    .orElseThrow(() -> new ReservaNoCreadaException("Usuario no encontrado"));
+    public ReservaDTO crearReserva(CrearReservaDTO dto) {
+        System.out.println("🔍 === RESERVA SERVICE - INICIO ===");
 
-            // Validar alojamiento
-            Alojamiento alojamiento = alojamientoRepository.findById(Long.valueOf(dto.alojamientoId()))
-                    .orElseThrow(() -> new ReservaNoCreadaException("Alojamiento no encontrado"));
+        // Verificar que el alojamiento existe
+        Alojamiento alojamiento = alojamientoRepository.findById(dto.alojamientoId())
+                .orElseThrow(() -> new RuntimeException("Alojamiento no encontrado"));
 
-            //  VALIDACIONES COMPLETAS DE NEGOCIO
-            validarFechasReserva(dto.checkIn(), dto.checkOut());
-            validarDisponibilidad(Long.valueOf(dto.alojamientoId()), dto.checkIn(), dto.checkOut());
-            validarCapacidad(alojamiento, dto.numeroHuespedes());
-            validarFechasFuturas(dto.checkIn(), dto.checkOut());
+        // Verificar que el usuario existe
+        Usuario usuario = usuarioRepository.findById(dto.usuarioId())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-            // Crear reserva
-            Reserva reserva = new Reserva();
-            reserva.setCheckIn(dto.checkIn());
-            reserva.setCheckOut(dto.checkOut());
-            reserva.setNumeroHuespedes(dto.numeroHuespedes());
-            reserva.setEstado(EstadoReserva.PENDIENTE);
-            reserva.setUsuario(usuario);
-            reserva.setAlojamiento(alojamiento);
-
-            if (dto.serviciosExtras() != null) {
-                reserva.setServiciosExtras(dto.serviciosExtras());
-            }
-
-            Reserva reservaGuardada = reservaRepository.save(reserva);
-
-            // ✅ NOTIFICACIONES MEJORADAS
-            enviarNotificacionesReservaCreada(reservaGuardada);
-
-            return reservaMapping.toDTO(reservaGuardada);
-
-        } catch (IllegalArgumentException e) {
-            throw new ReservaNoCreadaException(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error creando reserva: {}", e.getMessage(), e);
-            throw new ReservaNoCreadaException("Error al crear reserva: " + e.getMessage());
+        // Validar fechas
+        if (dto.checkIn().isAfter(dto.checkOut()) || dto.checkIn().isEqual(dto.checkOut())) {
+            throw new RuntimeException("La fecha de check-in debe ser anterior al check-out");
         }
+
+        // Validar capacidad
+        if (dto.numeroHuespedes() > alojamiento.getCapacidadMaxima()) {
+            throw new RuntimeException("El número de huéspedes excede la capacidad del alojamiento");
+        }
+        long dias = java.time.temporal.ChronoUnit.DAYS.between(dto.checkIn(), dto.checkOut());
+        double precioTotal = dias * alojamiento.getPrecioPorNoche();
+
+        Reserva reserva = new Reserva();
+        reserva.setCheckIn(dto.checkIn());
+        reserva.setCheckOut(dto.checkOut());
+        reserva.setNumeroHuespedes(dto.numeroHuespedes());
+        reserva.setPrecioTotal(precioTotal);
+        reserva.setEstado(EstadoReserva.valueOf("PENDIENTE"));
+        reserva.setAlojamiento(alojamiento);
+        reserva.setUsuario(usuario);
+        reserva.setServiciosExtras(dto.serviciosExtras());
+        reserva.setFechaCreacion(LocalDateTime.now());
+
+        Reserva reservaGuardada = reservaRepository.save(reserva);
+
+        System.out.println("✅ Reserva creada exitosamente con ID: " + reservaGuardada.getId());
+
+        return reservaMapper.toDTO(reservaGuardada);
+    }
+
+    @Override
+    public List<ReservaDTO> findByUsuarioId(Long usuarioId) {
+        System.out.println("🔍 Buscando reservas para usuario ID: " + usuarioId);
+
+        List<Reserva> reservas = reservaRepository.findByUsuarioIdOrderByFechaCreacionDesc(usuarioId);
+        System.out.println("📦 Reservas encontradas en BD: " + reservas.size());
+
+        return reservas.stream()
+                .map(reservaMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     // VALIDACIONES MEJORADAS

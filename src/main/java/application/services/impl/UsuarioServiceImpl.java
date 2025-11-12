@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,16 +41,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioMapping.toEntity(usuarioDTO);
         usuario.setContrasenia(passwordEncoder.encode(usuarioDTO.contrasenia()));
         usuario.setActivo(true);
-        usuario.setRol(Role.USUARIO);
+        usuario.setRol(usuarioDTO.rol()); // ✅ Usar el rol que viene del DTO
         usuario.setDocumentosVerificados(false);
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
         return usuarioMapping.toDTO(usuarioGuardado);
-
     }
     @Override
     public boolean existePorEmail(String email) {
         return usuarioRepository.existsByEmail(email);
+    }
+
+    public Optional<Usuario> findById(Long id) {
+        System.out.println("🔍 Buscando usuario con ID: " + id);
+        Optional<Usuario> usuario = usuarioRepository.findById(id);
+
+        if (usuario.isPresent()) {
+            System.out.println("✅ Usuario encontrado: " + usuario.get().getNombre());
+        } else {
+            System.out.println("❌ Usuario no encontrado con ID: " + id);
+        }
+
+        return usuario;
     }
 
     @Override
@@ -121,6 +134,11 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         System.out.println("✅ Usuario encontrado: " + usuario.getNombre());
         return usuarioMapping.toDTO(usuario);
+    }
+@Override
+    public Usuario findByEmail(String email) throws UsuarioNoEncontradoException {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con email: " + email));
     }
 
     // ✅ ACTUALIZAR USUARIO

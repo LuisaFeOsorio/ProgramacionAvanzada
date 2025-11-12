@@ -41,6 +41,79 @@ public class AlojamientoServiceImpl implements AlojamientoService {
     private final UsuarioRepository usuarioRepository;
     private final AlojamientoMapper alojamientoMapper;
 
+    @Override
+    public AlojamientoDTO crear(CrearAlojamientoDTO dto) {
+        Usuario anfitrion = usuarioRepository.findById(dto.anfitrionId())
+                .orElseThrow(() -> new RuntimeException("El anfitrión no existe"));
+
+        Alojamiento a = new Alojamiento();
+        a.setNombre(dto.nombre());
+        a.setDescripcion(dto.descripcion());
+        a.setTipo(dto.tipo());
+        a.setCiudad(dto.ciudad());
+        a.setPais(dto.pais());
+        a.setDireccion(dto.direccion());
+        a.setPrecioPorNoche(dto.precioPorNoche());
+        a.setCapacidadMaxima(dto.capacidadMaxima());
+        a.setNumeroHabitaciones(dto.numeroHabitaciones());
+        a.setNumeroBanos(dto.numeroBanos());
+        a.setServicios(dto.servicios());
+        a.setImagenes(dto.imagenes());
+        a.setAnfitrion(anfitrion);
+
+        // Los siguientes atributos se setean automáticamente por @PrePersist:
+        // - fechaCreacion
+        // - activo (true)
+        // - calificacionPromedio (0.0)
+        // - totalCalificaciones (0)
+
+        alojamientoRepository.save(a);
+
+        return alojamientoMapper.toDTO(a);
+    }
+
+
+    @Override
+    public List<AlojamientoDTO> obtenerTodos() {
+        return alojamientoRepository.findAll()
+                .stream()
+                .map(alojamientoMapper::toDTO) // Usar el mapper
+                .toList();
+    }
+
+    @Override
+    public AlojamientoDTO mapToDTO(Alojamiento a) {
+        return new AlojamientoDTO(
+                a.getId(),
+                a.getNombre(),
+                a.getDescripcion(),
+                a.getTipo(),
+                a.getCiudad(),
+                a.getPais(),
+                a.getDireccion(),
+                a.getPrecioPorNoche(),
+                a.getCapacidadMaxima(),
+                a.getNumeroHabitaciones(),
+                a.getNumeroBanos(),
+                a.getServicios(),
+                a.getImagenes(),
+                obtenerImagenPrincipal(a), // Método helper
+                a.getCalificacionPromedio(),
+                a.getActivo(),
+                a.getAnfitrion().getId(), // anfitrionId
+                a.getFechaCreacion(),
+                a.getTotalCalificaciones()
+        );
+    }
+
+    private String obtenerImagenPrincipal(Alojamiento a) {
+        if (a.getImagenes() == null || a.getImagenes().isEmpty()) {
+            return null;
+        }
+        return a.getImagenes().get(0);
+    }
+
+
     //  CREAR ALOJAMIENTO
     @Override
     public AlojamientoDTO crearAlojamiento(String hostId, CrearAlojamientoDTO dto) throws CrearAlojamientoException {
@@ -354,4 +427,25 @@ public class AlojamientoServiceImpl implements AlojamientoService {
             throw new RuntimeException("Error al marcar imagen principal: " + e.getMessage());
         }
     }
+
+    @Override
+    public List<AlojamientoDTO> obtenerTodosAlojamientos() {
+//        System.out.println("🔍 Buscando todos los alojamientos activos");
+//
+//        // Asumiendo que tienes un repository
+//        List<Alojamiento> alojamientos = alojamientoRepository.findByActivoTrue();
+//
+//        return alojamientos.stream()
+//                .map(this::convertirToDTO)
+//                .collect(Collectors.toList());
+        return List.of();
+    }
+
+    @Override
+    public AlojamientoDTO obtenerAlojamientoPorId(Long id) {
+        Alojamiento alojamiento = alojamientoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Alojamiento no encontrado"));
+        return alojamientoMapper.toDTO(alojamiento);
+    }
+
 }

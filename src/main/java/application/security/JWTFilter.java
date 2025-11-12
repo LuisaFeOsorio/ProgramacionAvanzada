@@ -1,75 +1,103 @@
 package application.security;
 
+import application.services.impl.UserDetailsServiceImpl;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtils jwtUtil;
+    private final UserDetailsServiceImpl userDetailsService;
+
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
 
-        // Rutas que NO pasan por el filtro JWT
-        return (path.equals("/api/usuarios") && "POST".equals(method)) ||
-                (path.equals("/api/usuarios/registro") && "POST".equals(method)) ||
-                path.startsWith("/api/auth/") ||
-                path.startsWith("/api/dev/") || path.startsWith("/api/contrasenia/");
+        try {
+            String token = extractToken(request);
+
+            if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
+                authenticateUserFromToken(token);
+            }
+
+        } catch (Exception e) {
+            log.warn("JWT authentication failed: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+        }
+
+        chain.doFilter(request, response);
+    }
+
+    private void authenticateUserFromToken(String token) {
+        try {
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            if (StringUtils.hasText(username) &&
+                    SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (userDetails != null && userDetails.isEnabled() &&
+                        userDetails.isAccountNonLocked() && userDetails.isAccountNonExpired()) {
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("Authenticated user: {}", username);
+                }
+            }
+
+        } catch (Exception e) {
+            log.warn("Failed to authenticate user from JWT token: {}", e.getMessage());
+        }
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader(AUTHORIZATION_HEADER);
+
+        if (StringUtils.hasText(header) && header.startsWith(BEARER_PREFIX)) {
+            return header.substring(BEARER_PREFIX.length());
+        }
+
+        return null;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        System.out.println("=== JWT FILTER - Ruta protegida ===");
-        System.out.println("Path: " + request.getRequestURI());
-
-        final String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("❌ No Bearer token found");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": true, \"mensaje\": \"Token de autorización requerido\"}");
-            return;
-        }
-
-        try {
-            String jwt = authHeader.substring(7);
-
-            if (jwtUtil.validateToken(jwt)) {
-                var claims = jwtUtil.extractClaims(jwt);
-                String email = claims.getSubject();
-                String role = claims.get("role", String.class);
-
-                System.out.println("✅ Token válido - Email: " + email);
-
-                var authToken = new UsernamePasswordAuthenticationToken(email, null, null);
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                filterChain.doFilter(request, response);
-            } else {
-                System.out.println("❌ Token inválido");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\": true, \"mensaje\": \"Token inválido\"}");
-            }
-        } catch (Exception e) {
-            System.out.println("❌ Error procesando JWT: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": true, \"mensaje\": \"Error procesando token\"}");
-        }
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        // Endpoints públicos que no requieren autenticación
+        return path.startsWith("/api/auth/login") ||
+                path.startsWith("/api/contrasenia/") ||
+                path.startsWith("/api/imagenes") ||
+                path.startsWith("/api/alojamientos/buscar") ||
+                path.startsWith("/api/alojamientos/buscar-rapida") ||
+                path.startsWith("/api/alojamientos/tipos") ||
+                path.startsWith("/api/comentarios/alojamiento/") ||
+                path.equals("/api/auth/create-test-user");
     }
 }

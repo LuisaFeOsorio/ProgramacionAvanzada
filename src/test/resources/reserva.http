@@ -1,45 +1,116 @@
-@authToken = eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsImVtYWlsIjoiZ29uemFsZXNAZXhhbXBsZS5jb20iLCJzdWIiOiJnb256YWxlc0BleGFtcGxlLmNvbSIsImlhdCI6MTc2MDIyMTIzMywiZXhwIjoxNzYwMjI0ODMzfQ.HXLeiNwSsrIlKDkcZnWkwc9oU-DgFSJiHRh0AO2B8N0
-@baseUrl = http://localhost:8080
+### ----------------------------
+### PRUEBAS DE RESERVA API
+### ----------------------------
 
-# @name crearReserva
-POST {{baseUrl}}/api/reservas
-Authorization: Bearer {{authToken}}
+### 1. CREAR UNA RESERVA
+### CREAR RESERVA CON USUARIO EXISTENTE
+POST http://localhost:8080/api/reservas/crear
 Content-Type: application/json
 
 {
-  "checkIn": "2025-10-15",
-  "checkOut": "2025-10-18",
+  "checkIn": "2025-12-01",
+  "checkOut": "2025-12-05",
   "numeroHuespedes": 2,
-  "alojamientoId": "2",
-  "serviciosExtras": ["DESAYUNO", "WIFI"]
+  "alojamientoId": 1,
+  "usuarioId": 1,
+  "serviciosExtras": ["Parqueadero", "Wifi"]
 }
 
-### Crear reserva (fecha inválida → error 400)
-POST http://localhost:8080/api/reservas
+### CREAR RESERVA CON USUARIO INEXISTENTE (debería fallar)
+POST http://localhost:8080/api/reservas/crear
 Content-Type: application/json
 
 {
-  "checkIn": "2025-10-20",
-  "checkOut": "2025-10-18",
+  "checkIn": "2025-12-01",
+  "checkOut": "2025-12-05",
   "numeroHuespedes": 2,
-  "alojamientoId": "2",
+  "alojamientoId": 1,
+  "usuarioId": 999,
+  "serviciosExtras": ["Parqueadero"]
+}
+### 2. CREAR RESERVA SIN SERVICIOS EXTRAS
+POST http://localhost:8080/api/reservas/crear
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "checkIn": "2025-12-10",
+  "checkOut": "2025-12-12",
+  "numeroHuespedes": 1,
+  "alojamientoId": 1,
+  "usuarioId": 1,
   "serviciosExtras": []
 }
 
-### Crear reserva (alojamiento inexistente → error 404)
-POST http://localhost:8080/api/reservas
-Content-Type: application/json
 
-{
-  "checkIn": "2025-10-15",
-  "checkOut": "2025-10-18",
-  "numeroHuespedes": 2,
-  "alojamientoId": "999",
-  "serviciosExtras": []
-}
-
-### Consultar reserva por ID
+### 5. OBTENER RESERVA POR ID
 GET http://localhost:8080/api/reservas/1
+Authorization: Bearer {{auth_token}}
 
-### Eliminar reserva
-DELETE http://localhost:8080/api/reservas/1
+### 6. OBTENER RESERVAS POR USUARIO
+GET http://localhost:8080/api/reservas/usuario/1
+Authorization: Bearer {{auth_token}}
+
+### 7. OBTENER RESERVAS POR ALOJAMIENTO
+GET http://localhost:8080/api/reservas/alojamiento/1
+Authorization: Bearer {{auth_token}}
+
+### 8. CANCELAR RESERVA
+PUT http://localhost:8080/api/reservas/1/cancelar
+Authorization: Bearer {{auth_token}}
+
+### 9. CONFIRMAR RESERVA (para anfitrión)
+PUT http://localhost:8080/api/reservas/1/confirmar
+Authorization: Bearer {{auth_token}}
+
+### 10. ACTUALIZAR RESERVA
+PUT http://localhost:8080/api/reservas/1
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "checkIn": "2025-12-02",
+  "checkOut": "2025-12-06",
+  "numeroHuespedes": 3,
+  "alojamientoId": 1,
+  "usuarioId": 1,
+  "serviciosExtras": ["Parqueadero", "Wifi", "Desayuno"]
+}
+
+### ----------------------------
+### PRUEBAS DE AUTENTICACIÓN (si necesitas token)
+### ----------------------------
+
+### LOGIN PARA OBTENER TOKEN
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@ejemplo.com",
+  "contrasenia": "password123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.data);
+    client.log("Token guardado: " + client.global.get("auth_token"));
+%}
+
+### ----------------------------
+### PRUEBAS DE VALIDACIÓN
+### ----------------------------
+
+
+
+### RESERVA CON FECHAS PASADAS (debería fallar)
+POST http://localhost:8080/api/reservas/crear
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "checkIn": "2024-01-01",
+  "checkOut": "2024-01-05",
+  "numeroHuespedes": 2,
+  "alojamientoId": 1,
+  "usuarioId": 1,
+  "serviciosExtras": []
+}

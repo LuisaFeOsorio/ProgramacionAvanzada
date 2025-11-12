@@ -16,6 +16,8 @@ import java.util.List;
 @Repository
 public interface AlojamientoRepository extends JpaRepository<Alojamiento, Long>, JpaSpecificationExecutor<Alojamiento> {
 
+    List<Alojamiento> findAll();
+
     List<Alojamiento> findByAnfitrionId(Long anfitrionId);
 
     List<Alojamiento> findByActivoTrue();

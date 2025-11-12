@@ -25,4 +25,6 @@ public record FiltroBusquedaDTO(
     public static FiltroBusquedaDTO crear(String ciudad, Integer capacidadMin) {
         return new FiltroBusquedaDTO(ciudad, null, null, null, capacidadMin, null, null, 0, 10);
     }
+
+
 }

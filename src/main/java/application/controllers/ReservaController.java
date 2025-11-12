@@ -12,11 +12,13 @@ import application.model.Usuario;
 import application.services.impl.UsuarioServiceImpl;
 import application.services.reserva.ReservaService;
 import jakarta.validation.Valid;
-import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -30,32 +32,67 @@ public class ReservaController {
         this.usuarioService = usuarioService;
     }
 
-    @PostMapping
+    @PostMapping("/crear")
     public ResponseEntity<ReservaDTO> crearReserva(
-            Authentication authentication,
-            @Valid @RequestBody CrearReservaDTO dto) throws ReservaNoCreadaException {
+            @Valid @RequestBody CrearReservaDTO dto) {
 
         System.out.println("🏨 === CREAR RESERVA ===");
-        System.out.println("Authentication: " + authentication);
+        System.out.println("📦 DTO recibido: " + dto.toString());
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ReservaNoCreadaException("Usuario no autenticado");
+        try {
+
+            System.out.println("🔍 Validando usuario ID: " + dto.usuarioId());
+            Usuario usuario = usuarioService.findById(dto.usuarioId())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + dto.usuarioId()));
+
+            System.out.println("✅ Usuario validado: " + usuario.getNombre());
+
+            ReservaDTO reserva = reservaService.crearReserva(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(reserva);
+
+        } catch (Exception e) {
+            System.out.println("❌ Error creando reserva: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-
-        String email = authentication.getName();
-        System.out.println("✅ Usuario autenticado: " + email);
-
-        // Buscar el ID del usuario por email
-        String usuarioId = obtenerUsuarioIdPorEmail(email);
-
-        ReservaDTO reserva = reservaService.crearReserva(usuarioId, dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(reserva);
     }
+
+    @GetMapping("/mis-reservas")
+    public ResponseEntity<List<ReservaDTO>> getMisReservas(@AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            System.out.println("🔍 === OBTENER MIS RESERVAS ===");
+            System.out.println("👤 Usuario autenticado (username): " + userDetails.getUsername());
+
+            String username = userDetails.getUsername();
+
+            // Convertir el username (que es el ID del token) a Long
+            Long userId = Long.parseLong(username);
+
+            // Verificar que el usuario exista (por seguridad)
+            Usuario usuario = usuarioService.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + userId));
+
+            System.out.println("✅ Usuario encontrado: " + usuario.getId() + " - " + usuario.getEmail());
+
+            // Buscar reservas asociadas al usuario directamente por ID
+            List<ReservaDTO> reservas = reservaService.findByUsuarioId(usuario.getId());
+
+            System.out.println("📦 Reservas encontradas: " + reservas.size());
+            return ResponseEntity.ok(reservas);
+
+        } catch (Exception e) {
+            System.out.println("❌ Error obteniendo reservas: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
     private String obtenerUsuarioIdPorEmail(String email) throws ReservaNoCreadaException {
         try {
             System.out.println("🔍 Buscando usuario por email: " + email);
 
-            // Opción 1: Si tienes UsuarioService
             UsuarioDTO usuario = usuarioService.obtenerPorEmail(email);
             System.out.println("✅ Usuario encontrado: " + usuario.nombre() + " - ID: " + usuario.id());
             return usuario.id().toString();

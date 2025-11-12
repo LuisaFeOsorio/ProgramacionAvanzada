@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -50,30 +51,57 @@ public class ContraseniaServiceImpl implements ContraseniaService {
         // Enviar email con el código
         enviarEmailRecuperacion(usuario, codigo);
     }
-
+    @PostMapping("/restablecer")
     @Override
-    public void restablecerContrasena(String email, String codigo, String nuevaPassword) {
-        // Verificar que el código es válido
-        if (!verificarCodigo(email, codigo)) {
-            throw new IllegalArgumentException("Código de recuperación inválido o expirado");
+    public void restablecerContrasena(String email, String codigo, String nuevaContrasenia) {
+        System.out.println("🔐 === INICIO RESTABLECER CONTRASEÑA ===");
+        System.out.println("📧 Email: " + email);
+        System.out.println("🔑 Código: " + codigo);
+        System.out.println("🔒 Nueva contraseña: " + (nuevaContrasenia != null ? "*****" : "null"));
+
+        try {
+            // Verificar que el código es válido
+            if (!verificarCodigo(email, codigo)) {
+                System.out.println("❌ Código de recuperación inválido o expirado para: " + email);
+                throw new IllegalArgumentException("Código de recuperación inválido o expirado");
+            }
+            System.out.println("✅ Código válido");
+
+            // Validar nueva contraseña
+            validarContrasena(nuevaContrasenia);
+            System.out.println("✅ Nueva contraseña válida");
+
+            // Buscar usuario
+            Usuario usuario = usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> {
+                        System.out.println("❌ Usuario no encontrado: " + email);
+                        return new IllegalArgumentException("Usuario no encontrado");
+                    });
+            System.out.println("✅ Usuario encontrado: " + usuario.getNombre());
+
+            // Actualizar contraseña
+            usuario.setContrasenia(passwordEncoder.encode(nuevaContrasenia));
+            usuarioRepository.save(usuario);
+            System.out.println("✅ Contraseña actualizada correctamente");
+
+            // Limpiar código usado
+            codigosRecuperacion.remove(email);
+            System.out.println("🧹 Código de recuperación eliminado");
+
+            // Enviar email de confirmación
+            enviarEmailConfirmacion(usuario);
+            System.out.println("📧 Email de confirmación enviado");
+
+            System.out.println("🎉 === FIN RESTABLECER CONTRASEÑA ===");
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("⚠️ ERROR CONTROLADO: " + e.getMessage());
+            throw e; // Re-lanzar para que Spring devuelva 400
+        } catch (Exception e) {
+            System.out.println("❌ ERROR INESPERADO: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al restablecer la contraseña"); // 500 Internal Server Error
         }
-
-        // Validar nueva contraseña
-        validarContrasena(nuevaPassword);
-
-        // Buscar usuario
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-        // Actualizar contraseña
-        usuario.setContrasenia(passwordEncoder.encode(nuevaPassword));
-        usuarioRepository.save(usuario);
-
-        // Limpiar código usado
-        codigosRecuperacion.remove(email);
-
-        // Enviar email de confirmación
-        enviarEmailConfirmacion(usuario);
     }
 
     @Override

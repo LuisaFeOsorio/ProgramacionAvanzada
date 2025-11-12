@@ -13,7 +13,9 @@ import java.util.List;
 
 public interface ReservaService {
 
-    ReservaDTO crearReserva(String usuarioId, CrearReservaDTO dto) throws ReservaNoCreadaException;
+    ReservaDTO crearReserva(CrearReservaDTO dto);
+
+    List<ReservaDTO> findByUsuarioId(Long usuarioId);
 
     ReservaDTO obtenerReserva(String reservaId) throws ReservasNoObtenidasException;
 
