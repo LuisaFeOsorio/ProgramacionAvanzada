@@ -23,8 +23,6 @@ public interface ReservaService {
 
     ReservaDTO rechazarReserva(String reservaId, String anfitrionId);
 
-    void cancelarReserva(String reservaId, String quienCancelaId) throws ReservaNoCanceladaException;
-
     PaginacionDTO<ReservaDTO> listarReservas(FiltroReservaDTO filtro);
 
     PaginacionDTO<ReservaDTO> reservasPorUsuario(String usuarioId, int pagina, int tamanio);
@@ -36,4 +34,6 @@ public interface ReservaService {
     List<ReservaDTO> reservasParaCalendario(String alojamientoId, LocalDate desde, LocalDate hasta);
 
     void actualizarEstadosReservas();
+
+    ReservaDTO cancelarReserva(Long id);
 }

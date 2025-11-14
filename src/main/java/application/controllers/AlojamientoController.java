@@ -32,35 +32,31 @@ public class AlojamientoController {
     private final AlojamientoService alojamientoService;
     private final UsuarioService usuarioService;
 
-    @PostMapping("/crear")
+
+@PostMapping("/crear/{Id}")
     public ResponseEntity<ResponseDTO<AlojamientoDTO>> crearAlojamiento(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CrearAlojamientoDTO dto) throws CrearAlojamientoException, UsuarioNoEncontradoException {
+            @PathVariable Long anfitrionId,
+            @Valid @RequestBody CrearAlojamientoDTO dto) {
 
         System.out.println("🏠 === INICIANDO CREACIÓN DE ALOJAMIENTO ===");
+        System.out.println("🧑 ID del anfitrión recibido: " + anfitrionId);
 
-        String email = userDetails.getUsername();
-        System.out.println("📧 Email del usuario autenticado: " + email);
+        try {
+            Usuario usuario = usuarioService.findById(anfitrionId)
+                    .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + anfitrionId));
 
-        Usuario usuario = usuarioService.findByEmail(email);
-        System.out.println("🔍 Usuario encontrado: " + (usuario != null ? usuario.getNombre() : "NULL"));
+            System.out.println("✅ Usuario encontrado: " + usuario.getNombre());
+            AlojamientoDTO alojamientoCreado = alojamientoService.crearAlojamiento(String.valueOf(anfitrionId), dto);
 
-        if (usuario == null) {
-            System.out.println("❌ Usuario no encontrado en la base de datos");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, "Usuario no encontrado", null));
+            System.out.println("🎉 Alojamiento creado exitosamente con ID: " + alojamientoCreado.id());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ResponseDTO<>(false, "Alojamiento creado exitosamente", alojamientoCreado));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error al crear alojamiento: " + e.getMessage(), null));
         }
-
-        System.out.println("✅ Usuario ID: " + usuario.getId());
-        System.out.println("📦 DTO recibido: " + dto.toString());
-
-        AlojamientoDTO alojamientoCreado = alojamientoService.crearAlojamiento(String.valueOf(usuario.getId()), dto);
-
-        System.out.println("🎉 Alojamiento creado exitosamente con ID: " +
-                (alojamientoCreado != null ? alojamientoCreado.id() : "NULL"));
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseDTO<>(false, "Alojamiento creado exitosamente", alojamientoCreado));
     }
 
     @PostMapping("/crear-simple")
@@ -75,67 +71,60 @@ public class AlojamientoController {
         return ResponseEntity.ok(alojamientos);
     }
 
-    @PutMapping("/{id}/editarA")
-    public ResponseEntity<ResponseDTO<AlojamientoDTO>> editarAlojamiento(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String id,
-            @Valid @RequestBody EditarAlojamientoDTO dto) throws EditarAlojamientoException, UsuarioNoEncontradoException {
+    //nuevo
 
-        String email = userDetails.getUsername();
-        Usuario usuario = usuarioService.findByEmail(email);
 
-        if (usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, "Usuario no encontrado", null));
-        }
-
-        AlojamientoDTO alojamientoActualizado = alojamientoService.editarAlojamiento(id, dto);
-        return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento actualizado exitosamente", alojamientoActualizado));
-    }
-
-    @DeleteMapping("/{id}/eliminar")
-    public ResponseEntity<ResponseDTO<String>> eliminarAlojamiento(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String id) throws EliminarAlojamientoException, UsuarioNoEncontradoException {
-
-        String email = userDetails.getUsername();
-        Usuario usuario = usuarioService.findByEmail(email);
-
-        if (usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, "Usuario no encontrado", null));
-        }
-
-        alojamientoService.eliminarAlojamiento(id);
-        return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento eliminado exitosamente", null));
-    }
-
-    @GetMapping("/mis-alojamientos")
+    @GetMapping("/mis-alojamientos/{idAnfitrion}")
     public ResponseEntity<ResponseDTO<List<AlojamientoDTO>>> listarMisAlojamientos(
-            @AuthenticationPrincipal UserDetails userDetails) throws ListarAlojamientosException, UsuarioNoEncontradoException {
+            @PathVariable Long idAnfitrion) {
+        System.out.println("\n🎯 [GET] /api/alojamientos/mis-alojamientos/" + idAnfitrion);
 
-        String email = userDetails.getUsername();
-        Usuario usuario = usuarioService.findByEmail(email);
+        try {
+            Usuario usuario = usuarioService.findById(idAnfitrion)
+                    .orElse(null);
 
-        if (usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, "Usuario no encontrado", null));
+            if (usuario == null) {
+                System.err.println("⚠️ Usuario no encontrado con ID: " + idAnfitrion);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ResponseDTO<>(true, "Usuario no encontrado", null));
+            }
+
+            System.out.println("✅ Usuario encontrado: " + usuario.getNombre() + " (ID: " + usuario.getId() + ")");
+
+            // 👉 Usa directamente el ID como Long, no como String
+            List<AlojamientoDTO> alojamientos = alojamientoService.listarAlojamientosAnfitrion(usuario.getId().toString());
+
+            if (alojamientos == null || alojamientos.isEmpty()) {
+                System.out.println("⚠️ No se encontraron alojamientos para el anfitrión con ID: " + usuario.getId());
+                return ResponseEntity.ok(new ResponseDTO<>(false, "No se encontraron alojamientos", List.of()));
+            }
+
+            System.out.println("📦 Alojamientos encontrados: " + alojamientos.size());
+            alojamientos.forEach(a ->
+                    System.out.println("   🏠 " + a.nombre() + " - " + a.ciudad())
+            );
+
+            return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamientos obtenidos correctamente", alojamientos));
+
+        } catch (Exception e) {
+            System.err.println("💥 Error en listarMisAlojamientos: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error al listar alojamientos: " + e.getMessage(), null));
         }
-
-        List<AlojamientoDTO> alojamientos = alojamientoService.listarAlojamientosAnfitrion(String.valueOf(usuario.getId()));
-        return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamientos obtenidos", alojamientos));
     }
 
-    @GetMapping ("/obtenerT")
 
-        public ResponseEntity<List<AlojamientoDTO>> obtenerTodosAlojamientos() {
-            try {
-                List<AlojamientoDTO> alojamientos = alojamientoService.obtenerTodos();
-                return ResponseEntity.ok(alojamientos);
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-            }
+    @GetMapping("/obtenerT")
+
+    public ResponseEntity<List<AlojamientoDTO>> obtenerTodosAlojamientos() {
+        try {
+            List<AlojamientoDTO> alojamientos = alojamientoService.obtenerTodos();
+            return ResponseEntity.ok(alojamientos);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
 
     @GetMapping("/buscar")
     public ResponseEntity<ResponseDTO<PaginacionDTO<AlojamientoDTO>>> buscarAlojamientos(
@@ -208,25 +197,36 @@ public class AlojamientoController {
         return ResponseEntity.ok(new ResponseDTO<>(false, "Búsqueda rápida completada", resultado));
     }
 
-    @GetMapping("/{id}/puede-eliminarse")
-    public ResponseEntity<ResponseDTO<Boolean>> puedeEliminarse(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String id) throws UsuarioNoEncontradoException {
+    @PutMapping("/{id}/eliminar")
+    public ResponseEntity<ResponseDTO<String>> eliminarAlojamiento(
+            @PathVariable Long id) {
 
-        String email = userDetails.getUsername();
-        Usuario usuario = usuarioService.findByEmail(email);
+        try {
+            boolean puedeEliminarse = alojamientoService.puedeEliminarse(String.valueOf(id));
 
-        if (usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, "Usuario no encontrado", null));
+            if (!puedeEliminarse) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ResponseDTO<>(true,
+                                "No puede eliminarse: tiene reservas futuras",
+                                null));
+            }
+
+            alojamientoService.marcarComoInactivo(id);
+
+            return ResponseEntity.ok(
+                    new ResponseDTO<>(false, "Alojamiento marcado como INACTIVO", "OK")
+            );
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true,
+                            "Error eliminando alojamiento: " + e.getMessage(),
+                            null));
         }
-
-        boolean puedeEliminarse = alojamientoService.puedeEliminarse(id);
-        String mensaje = puedeEliminarse ?
-                "Puede eliminarse" : "No puede eliminarse (tiene reservas futuras)";
-
-        return ResponseEntity.ok(new ResponseDTO<>(false, mensaje, puedeEliminarse));
     }
+
+
+
 
     @PutMapping("/{id}/imagen-principal")
     @PreAuthorize("hasRole('ANFITRION')")
@@ -267,16 +267,84 @@ public class AlojamientoController {
                 false, "Tipos de alojamiento", TipoAlojamiento.values()
         ));
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<AlojamientoDTO> obtenerAlojamientoPorId(@PathVariable Long id) {
+
+    //nuevoo
+    @PutMapping("/editar/{id}")
+    public ResponseEntity<ResponseDTO<AlojamientoDTO>> editarAlojamiento(
+            @PathVariable Long id,
+            @Valid @RequestBody CrearAlojamientoDTO dto) {
+
+        System.out.println("\n========== 🏠 [INICIO EDICIÓN DE ALOJAMIENTO] ==========");
+        System.out.println("📌 ID recibido: " + id);
+        System.out.println("📦 Datos recibidos:");
+        System.out.println("   - Nombre: " + dto.nombre());
+        System.out.println("   - Descripción: " + dto.descripcion());
+        System.out.println("   - Ciudad: " + dto.ciudad());
+        System.out.println("   - País: " + dto.pais());
+        System.out.println("   - Precio por noche: " + dto.precioPorNoche());
+        System.out.println("   - Servicios: " + dto.servicios());
+        System.out.println("   - Imágenes: " + dto.imagenes());
+
         try {
-            AlojamientoDTO alojamiento = alojamientoService.obtenerAlojamientoPorId(id);
-            return ResponseEntity.ok(alojamiento);
+            AlojamientoDTO alojamientoActualizado = alojamientoService.editarAlojamiento(id.toString(), dto);
+            System.out.println("✅ Alojamiento actualizado correctamente con ID: " + alojamientoActualizado.id());
+            System.out.println("========== ✅ [FIN EDICIÓN ALOJAMIENTO] ==========\n");
+
+            return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento actualizado exitosamente", alojamientoActualizado));
+
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            System.out.println("❌ Error durante la edición del alojamiento:");
+            e.printStackTrace();
+            System.out.println("========== ❌ [FIN CON ERROR] ==========\n");
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error al actualizar el alojamiento: " + e.getMessage(), null));
         }
     }
 
+    //nuevoo
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseDTO<AlojamientoDTO>> obtenerAlojamientoPorId(@PathVariable Long id) {
+        System.out.println("\n========== 🏠 [INICIO CONSULTA ALOJAMIENTO POR ID] ==========");
+        System.out.println("📌 ID recibido: " + id);
 
+        try {
+            AlojamientoDTO alojamientoDTO = alojamientoService.obtenerAlojamientoPorId(id);
+
+            System.out.println("✅ Alojamiento encontrado:");
+            System.out.println("   - Nombre: " + alojamientoDTO.nombre());
+            System.out.println("   - Ciudad: " + alojamientoDTO.ciudad());
+            System.out.println("   - Precio por noche: " + alojamientoDTO.precioPorNoche());
+            System.out.println("========== ✅ [FIN CONSULTA ALOJAMIENTO] ==========\n");
+
+            return ResponseEntity.ok(new ResponseDTO<>(false, "Alojamiento obtenido correctamente", alojamientoDTO));
+
+        } catch (Exception e) {
+            System.out.println("❌ Error al obtener alojamiento:");
+            e.printStackTrace();
+            System.out.println("========== ❌ [FIN CON ERROR] ==========\n");
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseDTO<>(true, "Error al obtener alojamiento: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/{id}/puede-eliminarse")
+    public ResponseEntity<ResponseDTO<Boolean>> puedeEliminarse(@PathVariable String id) {
+
+        try {
+            boolean puedeEliminarse = alojamientoService.puedeEliminarse(id);
+
+            String mensaje = puedeEliminarse
+                    ? "Puede eliminarse"
+                    : "No puede eliminarse (tiene reservas futuras)";
+
+            return ResponseEntity.ok(new ResponseDTO<>(false, mensaje, puedeEliminarse));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ResponseDTO<>(true, "Error interno: " + e.getMessage(), null));
+        }
+    }
 
 }

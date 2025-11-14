@@ -9,14 +9,24 @@ import jakarta.validation.constraints.Past;
 import org.hibernate.validator.constraints.Length;
 import java.time.LocalDate;
 
-public record EditarUsuarioDTO(
-        @NotBlank @Length(max = 150) @Email String email,
-        @NotBlank @Length(max = 100) String nombre,
-        @Length(max = 10) String telefono,
-        @Length(max = 300) String fotoPerfil,
-        @NotNull @Past LocalDate fechaNacimiento,
-        @NotNull @Past Role rol,
-        @NotNull @Past String contrasenia
+        public record EditarUsuarioDTO(
+        @Length(max = 100)
+                String nombre,
+        String email,
+
+        @Length(max = 50)
+        String telefono,
+
+        @Length(min = 7, max = 100)  // Solo validar longitud si se envía
+        String contrasenia,
+
+        String foto_perfil,
+
+        @Past
+        LocalDate fechaNacimiento,
+
+        Role rol
 ) {
 
 }
+

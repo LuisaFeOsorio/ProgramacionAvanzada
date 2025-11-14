@@ -8,8 +8,11 @@ import application.exceptions.usuario.UsuarioNoEncontradoException;
 import application.model.Usuario;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UsuarioService {
+
+    Optional<Usuario> findById(Long id);
 
     UsuarioDTO crear(CrearUsuarioDTO usuarioDTO) throws ValueConflictException, EmailEnUsoException;
 
@@ -20,7 +23,8 @@ public interface UsuarioService {
     List<UsuarioDTO> obtenerTodos(String nombre, String correo, int pagina, int tamanio
     );
 
-    UsuarioDTO actualizar(String id, EditarUsuarioDTO usuarioDTO) throws EmailEnUsoException;
+
+    UsuarioDTO actualizarUsuario(Long id, EditarUsuarioDTO dto);
 
     void cambiarContrasenia(String id, CambioContraseniaDTO cambioContraseniaDTO) throws UsuarioNoEncontradoException;
 

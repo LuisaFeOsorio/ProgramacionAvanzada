@@ -52,18 +52,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioRepository.existsByEmail(email);
     }
 
-    public Optional<Usuario> findById(Long id) {
-        System.out.println("🔍 Buscando usuario con ID: " + id);
-        Optional<Usuario> usuario = usuarioRepository.findById(id);
-
-        if (usuario.isPresent()) {
-            System.out.println("✅ Usuario encontrado: " + usuario.get().getNombre());
-        } else {
-            System.out.println("❌ Usuario no encontrado con ID: " + id);
-        }
-
-        return usuario;
-    }
 
     @Override
     public void restablecerContrasenia(String email, String nuevaContrasenia) {
@@ -140,52 +128,51 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con email: " + email));
     }
-
-    // ✅ ACTUALIZAR USUARIO
     @Override
-    public UsuarioDTO actualizar(String id, EditarUsuarioDTO usuarioDTO) throws EmailEnUsoException {
-        Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+    public UsuarioDTO actualizarUsuario(Long id, EditarUsuarioDTO dto) {
 
-        // Validar que el nuevo email no exista en otro usuario (si se está cambiando)
-        if (usuarioDTO.email() != null && !usuario.getEmail().equals(usuarioDTO.email())) {
-            if (usuarioRepository.existsByEmail(usuarioDTO.email())) {
-                throw new EmailEnUsoException("El email ya está en uso por otro usuario");
-            }
+        System.out.println("🔧 [SERVICE] Actualizando usuario " + id);
+
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (dto.nombre() != null) usuario.setNombre(dto.nombre());
+        if (dto.email() != null) usuario.setEmail(dto.email());
+        if (dto.telefono() != null) usuario.setTelefono(dto.telefono());
+        if (dto.fechaNacimiento() != null) usuario.setFechaNacimiento(dto.fechaNacimiento());
+        if (dto.rol() != null) usuario.setRol(dto.rol());
+
+        if (dto.contrasenia() != null && !dto.contrasenia().isBlank()) {
+            usuario.setContrasenia(passwordEncoder.encode(dto.contrasenia()));
         }
 
-        // Actualizar entidad usando el mapper
-        usuarioMapping.updateEntityFromDTO(usuarioDTO, usuario);
-
-        // Si se cambió el email, actualizarlo (el mapper lo ignora por seguridad)
-        if (usuarioDTO.email() != null) {
-            usuario.setEmail(usuarioDTO.email());
+        if (dto.foto_perfil() != null) {
+            usuario.setFoto_perfil(dto.foto_perfil());
         }
 
-        Usuario usuarioActualizado = usuarioRepository.save(usuario);
-        return usuarioMapping.toDTO(usuarioActualizado);
+        Usuario guardado = usuarioRepository.save(usuario);
+        System.out.println("✅ Usuario actualizado en BD");
+
+        return usuarioMapping.toDTO(guardado);
     }
+
 
     @Override
     public void cambiarContrasenia(String id, CambioContraseniaDTO cambioContraseniaDTO)throws UsuarioNoEncontradoException {
         Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id));
 
-        // Validar que la contraseña actual sea correcta
         if (!passwordEncoder.matches(cambioContraseniaDTO.contraseniaActual(), usuario.getContrasenia())) {
             throw new IllegalArgumentException("La contraseña actual es incorrecta");
         }
 
-        // Validar que la nueva contraseña sea diferente
         if (passwordEncoder.matches(cambioContraseniaDTO.nuevaContrasenia(), usuario.getContrasenia())) {
             throw new IllegalArgumentException("La nueva contraseña debe ser diferente a la actual");
         }
-
         usuario.setContrasenia(passwordEncoder.encode(cambioContraseniaDTO.nuevaContrasenia()));
         usuarioRepository.save(usuario);
     }
 
-    // ✅ CAMBIAR ESTADO (ACTIVAR/DESACTIVAR)
     @Override
     public UsuarioDTO cambiarEstado(String id)throws UsuarioNoEncontradoException {
         Usuario usuario = usuarioRepository.findById(Long.valueOf(id))
@@ -293,6 +280,23 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new IllegalArgumentException("Rol no válido: " + rol);
         }
     }
+    @Override
+    public Optional<Usuario> findById(Long id) {
+        System.out.println("🔍 Buscando usuario con ID: " + id);
+
+        Optional<Usuario> usuario = usuarioRepository.findById(id);
+
+        if (usuario.isPresent()) {
+            System.out.println("✅ Usuario encontrado: " + usuario.get().getNombre());
+        } else {
+            System.out.println("❌ Usuario no encontrado con ID: " + id);
+        }
+
+        return usuario;
+    }
+
+    // 🔧 Aquí continuarías con los demás métodos (crear, editar, etc.)
+
 
     // ✅ MÉTODOS DE CONSULTA ADICIONALES
     @Transactional(readOnly = true)

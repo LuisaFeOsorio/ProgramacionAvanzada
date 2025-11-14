@@ -2,7 +2,6 @@ package application.services.impl;
 
 import application.dto.alojamiento.AlojamientoDTO;
 import application.dto.alojamiento.CrearAlojamientoDTO;
-import application.dto.alojamiento.EditarAlojamientoDTO;
 import application.dto.alojamiento.FiltroBusquedaDTO;
 import application.dto.paginacion.PaginacionDTO;
 import application.exceptions.alojamiento.CrearAlojamientoException;
@@ -60,12 +59,6 @@ public class AlojamientoServiceImpl implements AlojamientoService {
         a.setServicios(dto.servicios());
         a.setImagenes(dto.imagenes());
         a.setAnfitrion(anfitrion);
-
-        // Los siguientes atributos se setean automáticamente por @PrePersist:
-        // - fechaCreacion
-        // - activo (true)
-        // - calificacionPromedio (0.0)
-        // - totalCalificaciones (0)
 
         alojamientoRepository.save(a);
 
@@ -191,7 +184,7 @@ public class AlojamientoServiceImpl implements AlojamientoService {
 
 
     @Override
-    public AlojamientoDTO editarAlojamiento(String alojamientoId, EditarAlojamientoDTO dto) throws EditarAlojamientoException {
+    public AlojamientoDTO editarAlojamiento(String alojamientoId, CrearAlojamientoDTO dto) throws EditarAlojamientoException {
         try {
             Alojamiento alojamiento = alojamientoRepository.findById(Long.valueOf(alojamientoId))
                     .orElseThrow(() -> new EditarAlojamientoException("Alojamiento no encontrado"));
@@ -427,6 +420,24 @@ public class AlojamientoServiceImpl implements AlojamientoService {
             throw new RuntimeException("Error al marcar imagen principal: " + e.getMessage());
         }
     }
+
+    @Transactional
+    @Override
+    public void marcarComoInactivo(Long id) {
+        try {
+            Alojamiento alojamiento = alojamientoRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Alojamiento no encontrado con ID: " + id));
+
+            alojamiento.setActivo(false); // 👈 Marcar como inactivo
+            alojamientoRepository.save(alojamiento);
+
+            log.info("🟡 Alojamiento {} marcado como inactivo", id);
+        } catch (Exception e) {
+            log.error("❌ Error al marcar alojamiento {} como inactivo: {}", id, e.getMessage());
+            throw new RuntimeException("Error al marcar alojamiento como inactivo");
+        }
+    }
+
 
     @Override
     public List<AlojamientoDTO> obtenerTodosAlojamientos() {

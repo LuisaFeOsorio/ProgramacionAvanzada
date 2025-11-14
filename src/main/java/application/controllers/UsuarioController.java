@@ -5,7 +5,10 @@ import application.dto.contrasenia.CambioContraseniaDTO;
 import application.dto.usuario.*;
 import application.exceptions.usuario.EmailEnUsoException;
 import application.exceptions.usuario.UsuarioNoEncontradoException;
+import application.mappers.UsuarioMapper;
+import application.model.Usuario;
 import application.model.enums.Role;
+import application.repositories.UsuarioRepository;
 import application.services.impl.ImageServiceImpl;
 import application.services.usuario.UsuarioService;
 import jakarta.validation.Valid;
@@ -18,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,8 +37,13 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     Role role;
     private final ImageServiceImpl imagenService;
+    private final PasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final UsuarioMapper usuarioMapper;
+
 
     @PostMapping(value = "/registro", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
     public ResponseEntity<ResponseDTO<UsuarioDTO>> crearUsuario(
             @RequestPart("nombre") String nombre,
             @RequestPart("apellido") String apellido,
@@ -42,20 +51,18 @@ public class UsuarioController {
             @RequestPart(value = "telefono", required = false) String telefono,
             @RequestPart("fechaNacimiento") String fechaNacimientoStr,
             @RequestPart("contrasenia") String contrasenia,
-            @RequestPart(value = "rol", required = false) String rol, // ✅ Agregar este parámetro
+            @RequestPart(value = "rol", required = false) String rol,
             @RequestPart(value = "fotoPerfil", required = false) MultipartFile fotoPerfil) {
 
         try {
-            // Convertir fecha de nacimiento
+
             LocalDate fechaNacimiento = LocalDate.parse(fechaNacimientoStr);
 
-            // Subir imagen si existe
             String fotoPerfilUrl = null;
             if (fotoPerfil != null && !fotoPerfil.isEmpty()) {
                 fotoPerfilUrl = imagenService.upload(fotoPerfil).toString();
             }
 
-            // ✅ Determinar el rol basado en lo que viene del frontend
             Role role;
             if (rol != null && rol.equalsIgnoreCase("ANFITRION")) {
                 role = Role.ANFITRION;
@@ -70,7 +77,7 @@ public class UsuarioController {
                     contrasenia,
                     fotoPerfilUrl != null ? fotoPerfilUrl : "",
                     fechaNacimiento,
-                    role // ✅ Usar el rol determinado
+                    role
             );
 
             UsuarioDTO usuarioCreado = usuarioService.crear(usuarioDTO);
@@ -88,8 +95,6 @@ public class UsuarioController {
         }
     }
 
-
-    // ✅ OBTENER TODOS LOS USUARIOS (SOLO ADMIN)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseDTO<List<UsuarioDTO>>> obtenerTodosUsuarios(
@@ -116,47 +121,32 @@ public class UsuarioController {
         }
     }
 
-    // ✅ ACTUALIZAR USUARIO (USUARIO PROPIETARIO O ADMIN) - CORREGIDO
-    @PutMapping("/{id}")
-    @PreAuthorize("@usuarioSecurity.esMismoUsuario(#id) or hasRole('ADMIN')")
+//estamos usando este
+    @PutMapping("/{id}/editar")
     public ResponseEntity<ResponseDTO<UsuarioDTO>> actualizarUsuario(
-            @PathVariable String id,
-            @Valid @RequestBody EditarUsuarioDTO usuarioDTO) {
+            @PathVariable Long id,
+            @Valid @RequestBody EditarUsuarioDTO dto) {
 
-        System.out.println("✏️ === ACTUALIZAR USUARIO ===");
-        System.out.println("📥 ID del path: " + id);
-        System.out.println("📥 DTO recibido - Nombre: " + usuarioDTO.nombre() + ", Email: " + usuarioDTO.email());
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("🔐 Authentication: " + auth);
-        System.out.println("👤 Principal: " + (auth != null ? auth.getPrincipal() : "null"));
+        System.out.println("📥 [PUT] Actualizando usuario ID=" + id);
+        System.out.println("📦 DTO recibido: " + dto);
 
         try {
-            UsuarioDTO usuarioActualizado = usuarioService.actualizar(id, usuarioDTO);
-            return ResponseEntity.ok(new ResponseDTO<>(false, "Usuario actualizado exitosamente", usuarioActualizado));
-        } catch (EmailEnUsoException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseDTO<>(true, e.getMessage(), null));
+            UsuarioDTO actualizado = usuarioService.actualizarUsuario(id, dto);
+
+            return ResponseEntity.ok(
+                    new ResponseDTO<>(false, "Usuario actualizado correctamente", actualizado)
+            );
+
         } catch (Exception e) {
-            System.out.println("❌ Error en actualizarUsuario: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseDTO<>(true, "Error interno: " + e.getMessage(), null));
+                    .body(new ResponseDTO<>(true, "Error al actualizar usuario: " + e.getMessage(), null));
         }
     }
 
-    // ✅ ELIMINAR USUARIO (SOLO ADMIN)
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseDTO<String>> eliminarUsuario(@PathVariable String id) {
-        try {
-            usuarioService.eliminar(id);
-            return ResponseEntity.ok(new ResponseDTO<>(false, "Usuario eliminado exitosamente", null));
-        } catch (UsuarioNoEncontradoException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseDTO<>(true, e.getMessage(), null));
-        }
-    }
+
+
+
 
     // ✅ CAMBIAR CONTRASEÑA (USUARIO PROPIETARIO)
     @PostMapping("/{id}/cambiar-contrasenia")
@@ -263,7 +253,6 @@ public class UsuarioController {
         return ResponseEntity.ok(new ResponseDTO<>(false, mensaje, anfitriones));
     }
 
-    // ✅ OBTENER MI PERFIL (USUARIO AUTENTICADO) - CORREGIDO
     @GetMapping("/me")
     public ResponseEntity<ResponseDTO<UsuarioDTO>> obtenerMiPerfil(@AuthenticationPrincipal UserDetails userDetails) {
         try {
@@ -292,7 +281,7 @@ public class UsuarioController {
         }
     }
 
-    // ✅ VERIFICAR SI ES ANFITRIÓN
+
     @GetMapping("/{id}/es-anfitrion")
     public ResponseEntity<ResponseDTO<Boolean>> esAnfitrion(@PathVariable String id) {
         try {
@@ -304,7 +293,6 @@ public class UsuarioController {
         }
     }
 
-    // ✅ ENDPOINT TEMPORAL PARA ACTUALIZACIÓN (SIN SEGURIDAD)
     @PutMapping("/{id}/temp")
 
     public ResponseEntity<ResponseDTO<UsuarioDTO>> actualizarUsuarioTemp(
@@ -322,18 +310,14 @@ public class UsuarioController {
 
         try {
             System.out.println("🔄 Llamando a usuarioService.actualizar()...");
-            UsuarioDTO usuarioActualizado = usuarioService.actualizar(id, usuarioDTO);
+            UsuarioDTO usuarioActualizado = usuarioService.actualizarUsuario(Long.valueOf(id), usuarioDTO);
             System.out.println("✅ Usuario actualizado exitosamente: " + usuarioActualizado.nombre());
             return ResponseEntity.ok(new ResponseDTO<>(false, "Usuario actualizado exitosamente (temp)", usuarioActualizado));
 
-        } catch (EmailEnUsoException e) {
-            System.out.println("❌ Email en uso: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseDTO<>(true, e.getMessage(), null));
         } catch (Exception e) {
             System.out.println("💥 ERROR CRÍTICO en actualización: " + e.getClass().getSimpleName());
             System.out.println("💥 Mensaje: " + e.getMessage());
-            e.printStackTrace(); // ⭐⭐ ESTO ES CRÍTICO ⭐⭐
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ResponseDTO<>(true, "Error: " + e.getMessage(), null));
         }

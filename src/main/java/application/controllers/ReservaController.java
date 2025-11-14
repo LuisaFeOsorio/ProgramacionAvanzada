@@ -1,5 +1,6 @@
 package application.controllers;
 
+import application.dto.ResponseDTO;
 import application.dto.paginacion.PaginacionDTO;
 import application.dto.reserva.CrearReservaDTO;
 import application.dto.reserva.FiltroReservaDTO;
@@ -33,7 +34,7 @@ public class ReservaController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<ReservaDTO> crearReserva(
+    public ResponseEntity<ResponseDTO<ReservaDTO>> crearReserva(
             @Valid @RequestBody CrearReservaDTO dto) {
 
         System.out.println("🏨 === CREAR RESERVA ===");
@@ -48,14 +49,29 @@ public class ReservaController {
             System.out.println("✅ Usuario validado: " + usuario.getNombre());
 
             ReservaDTO reserva = reservaService.crearReserva(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(reserva);
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(new ResponseDTO<>(
+                            false,
+                            "Reserva creada correctamente",
+                            reserva
+                    ));
 
         } catch (Exception e) {
             System.out.println("❌ Error creando reserva: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDTO<>(
+                            true,
+                            "Error al crear reserva: " + e.getMessage(),
+                            null
+                    ));
         }
     }
+
 
     @GetMapping("/mis-reservas")
     public ResponseEntity<List<ReservaDTO>> getMisReservas(@AuthenticationPrincipal UserDetails userDetails) {
@@ -109,13 +125,18 @@ public class ReservaController {
         return ResponseEntity.ok(reserva);
     }
 
-    @PostMapping("/{id}/cancelar")
-    public ResponseEntity<Void> cancelarReserva(
-            @PathVariable String id,
-            @AuthenticationPrincipal Usuario usuario) throws ReservaNoCanceladaException {
-        reservaService.cancelarReserva(id, usuario.getId().toString());
-        return ResponseEntity.ok().build();
+    @PutMapping("/{id}/cancelar")
+    public ResponseEntity<ReservaDTO> cancelarReserva(@PathVariable Long id) {
+        System.out.println("🛑 Cancelando reserva con ID: " + id);
+        try {
+            ReservaDTO reservaCancelada = reservaService.cancelarReserva(id);
+            return ResponseEntity.ok(reservaCancelada);
+        } catch (Exception e) {
+            System.out.println("❌ Error cancelando reserva: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
+
 
     @GetMapping
     public ResponseEntity<PaginacionDTO<ReservaDTO>> listarReservas(

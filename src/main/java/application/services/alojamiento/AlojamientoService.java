@@ -8,6 +8,7 @@ import application.dto.paginacion.PaginacionDTO;
 import application.exceptions.alojamiento.*;
 import application.model.Alojamiento;
 import application.repositories.AlojamientoRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public interface AlojamientoService {
 
     AlojamientoDTO obtenerAlojamiento(String alojamientoId) throws ObtenerAlojamientoException;
 
-    AlojamientoDTO editarAlojamiento(String alojamientoId, EditarAlojamientoDTO dto) throws EditarAlojamientoException;
+    AlojamientoDTO editarAlojamiento(String alojamientoId, CrearAlojamientoDTO dto) throws EditarAlojamientoException;
 
     void eliminarAlojamiento(String alojamientoId) throws EliminarAlojamientoException;
 
@@ -34,6 +35,10 @@ public interface AlojamientoService {
     boolean puedeEliminarse(String alojamientoId);
 
     AlojamientoDTO marcarImagenPrincipal(String alojamientoId, String imageId);
+
+    @Transactional
+    void marcarComoInactivo(Long id);
+
     List<AlojamientoDTO> obtenerTodosAlojamientos();
 
 

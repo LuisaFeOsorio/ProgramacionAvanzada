@@ -213,35 +213,6 @@ public class ReservaServiceImpl implements ReservaService {
         return reservaMapping.toDTO(reserva);
     }
 
-    // ✅ CANCELACIÓN DE RESERVA MEJORADA
-    @Override
-    public void cancelarReserva(String reservaId, String quienCancelaId) throws ReservaNoCanceladaException {
-        try {
-            Reserva reserva = reservaRepository.findById(Long.valueOf(reservaId))
-                    .orElseThrow(() -> new ReservaNoCanceladaException("Reserva no encontrada"));
-
-            Usuario quienCancela = usuarioRepository.findById(Long.valueOf(quienCancelaId))
-                    .orElseThrow(() -> new ReservaNoCanceladaException("Usuario no encontrado"));
-
-            // Validar que puede cancelar
-            validarCancelacion(reserva, quienCancela);
-
-            // Cambiar estado
-            reserva.setEstado(EstadoReserva.CANCELADA);
-            reservaRepository.save(reserva);
-
-            // Notificar cancelación
-            enviarNotificacionesReservaCancelada(reserva, quienCancela);
-
-        } catch (IllegalArgumentException e) {
-            throw new ReservaNoCanceladaException(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error cancelando reserva: {}", e.getMessage(), e);
-            throw new ReservaNoCanceladaException("Error al cancelar reserva: " + e.getMessage());
-        }
-    }
-
-    // ✅ VALIDACIÓN DE CANCELACIÓN MEJORADA
     private void validarCancelacion(Reserva reserva, Usuario quienCancela) {
         // Solo usuario o anfitrión pueden cancelar
         boolean esUsuario = reserva.getUsuario().getId().equals(quienCancela.getId());
@@ -251,7 +222,6 @@ public class ReservaServiceImpl implements ReservaService {
             throw new IllegalArgumentException("No tienes permisos para cancelar esta reserva");
         }
 
-        // ✅ CORREGIDO: Si es usuario, validar 48 horas antes (exacto)
         if (esUsuario) {
             LocalDateTime limiteCancelacion = reserva.getCheckIn().atStartOfDay().minusHours(48);
             if (LocalDateTime.now().isAfter(limiteCancelacion)) {
@@ -441,6 +411,22 @@ public class ReservaServiceImpl implements ReservaService {
         if (!reservasCompletadas.isEmpty()) {
             log.info("Actualizadas {} reservas a estado COMPLETADA", reservasCompletadas.size());
         }
+    }
+
+    @Override
+    public ReservaDTO cancelarReserva(Long id) {
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+
+        if (reserva.getEstado() == EstadoReserva.CANCELADA) {
+            throw new RuntimeException("La reserva ya está cancelada");
+        }
+
+        reserva.setEstado(EstadoReserva.CANCELADA);
+        Reserva reservaActualizada = reservaRepository.save(reserva);
+        System.out.println("✅ Reserva cancelada: " + reservaActualizada.getId());
+
+        return reservaMapper.toDTO(reservaActualizada);
     }
 
     // ✅ NUEVO: OBTENER RESERVAS POR USUARIO (ordenadas por fecha más reciente)
